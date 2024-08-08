@@ -68,7 +68,7 @@ if (!dir.exists(figures_path)) {
 }
 ```
 
-# 4 Database informartion
+# 5 Database informartion
 
 The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 96 columns and 1754 rows. The columns represent various forms of metadata extracted from articles that were included in Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour: a systematic map and open access database" (doi: XXXXX).
 
@@ -80,11 +80,10 @@ More generally, column names that start with 'validity' are metadata relating to
 setwd(input_path)
 
 READ_ME <- read.csv("READ-ME.csv", na = "NA") # loading the READ-ME file
-
-READ_ME # Outputting the READ-ME file as a tibble
 ```
 
-# 5 Required R packages
+
+# 6 Required R packages
 
 These are the R packages required to run the script. I have added them to a list so that I can install them all in one go using the function below called loaded_packages. This function I have made will load all the packages in the list below, if the packages are not already installed, this function will first install them.
 
@@ -145,7 +144,7 @@ For ggtree and treeio you may need to run this code for instillation
 
 
 
-# 8 Importing EIPAAB database
+# 7 Importing EIPAAB database
 
 Importing the EIPAAB-database.csv database (accessed from: https://osf.io/atwy6/).
 
@@ -158,7 +157,7 @@ EIPAAB_database <- read.csv("EIPAAB-database.csv", na = "NA")
 ```
 
 
-# 9 Total numbers
+# 8 Total numbers
 
 The first thing we will look at is how many unique (distinct) articles there are in the database, and how many rows of data there are.
 
@@ -195,7 +194,7 @@ EIPAAB_database %>%
   )
 ```
 
-# 10 Study motivation
+# 9 Study motivation
 
 Let's look at how the evidence collected breaks down by the three study motivations
 
@@ -224,9 +223,9 @@ EIPAAB_database <- EIPAAB_database %>%
   dplyr::mutate(study_motivation = fct_relevel(study_motivation, "Environmental", "Medical", "Basic research"))
 ```
 
-# 11 Publications by year
+# 10 Publications by year
 
-## 11.1 Number per year
+## 10.1 Number per year
 
 Year range is 1974 to 2022, so 48 years worth of empirical research has contributed to this evidence base.
 
@@ -303,7 +302,7 @@ setwd(figures_path)
 ggsave("study_pub_year_fig.pdf", plot = pub_year_fig, width = 10, height = 5)
 ```
 
-## 11.2 Cumulative and relative growth
+## 10.2 Cumulative and relative growth
 
 Making values for cumulative and relative growth in articles. This is the cumulative number of articles per year for each study moitvation, as well as the relative growth based on 2007. We selected 2007 for a 15 year overview in growth.
 
@@ -353,7 +352,7 @@ setwd(figures_path)
 ggsave("study_cumulative_articles_fig.pdf", plot = cumulative_articles_fig, width = 10, height = 5)
 ```
 
-## 11.3 Reltive growth
+## 10.3 Reltive growth
 
 Let's look at relative growth compared to the research area more broadly 
 
@@ -431,7 +430,7 @@ wos_research_areas_comp %>%
 ```
 
 
-### 11.3.1 Enviormental relative growth
+### 10.3.1 Enviormental relative growth
 
 Let's now compare the relative growth in Environmental research 
 
@@ -477,7 +476,7 @@ ggsave("study_relative_growth_env_fig.pdf", plot = relative_growth_env_fig, widt
 ```
 
 
-### 11.3.2 Medical relative growth
+### 10.3.2 Medical relative growth
 
 Comparing the relative growth in medical research 
 
@@ -523,7 +522,7 @@ ggsave("study_relative_growth_med_fig.pdf", plot = relative_growth_med_fig, widt
 ```
 
 
-### 11.3.2 Basic resarch relative growth
+### 10.3.2 Basic resarch relative growth
 
 Comparing relative growth in basic research 
 
@@ -568,7 +567,7 @@ setwd(figures_path)
 ggsave("study_relative_growth_base_fig.pdf", plot = relative_growth_base_fig, width = 5, height = 5)
 ```
 
-# 12 Population, Exposure and Outcome
+# 11 Population, Exposure and Outcome
 
 Looking at the link between the PEO elements. What was the average study design.
 
@@ -629,11 +628,11 @@ PEO_element_summary %>%
                  '%' = n/901)
 ```
 
-# 13 Species
+# 12 Species
 
 Let's take a closer look at species information 
 
-## 13.1 Number of distict species
+## 12.1 Number of distict species
 
 There are 173 species in the EIPAAB database
 
@@ -670,9 +669,9 @@ EIPAAB_database %>%
 ```
 
 
-## 13.2 Major taxa groups
+## 12.2 Major taxa groups
 
-### 13.2.1 Cladogram (Taxonomic tree)
+### 12.2.1 Cladogram (Taxonomic tree)
 
 Let's make a Cladogram to get an overview of what taxa are in the database
 
@@ -735,7 +734,7 @@ ggsave("spp_cladogram.pdf", plot = spp_cladogram, width = 8, height = 5)
 ```
 
 
-### 13.2.2 Class level
+### 12.2.2 Class level
 
 Let's group by class to see the major taxonomic Classes used
 
@@ -808,7 +807,7 @@ setwd(figures_path)
 ggsave("spp_class_n_spp_fig.pdf", plot = class_n_spp_fig, width = 5, height = 5)
 ```
 
-### 13.2.3 Phylum level
+### 12.2.3 Phylum level
 
 Here's a look at the % at the phylum level 
 
@@ -868,7 +867,7 @@ ggsave("spp_phylum_ring_fig.pdf", plot = phylum_ring_fig, width = 5, height = 5)
 ```
 
 
-## 13.3 Taxa representation
+## 12.3 Taxa representation
 
 Now we will look at how many times each phylum, class, order, family, genus, species appear in the database
 
@@ -1003,7 +1002,7 @@ setwd(figures_path)
 ggsave("spp_phylum_use_ring_fig.pdf", plot = phylum_use_ring_fig, width = 5, height = 5)
 ```
 
-### 13.3.2 Taxa representation by study motivation
+### 12.3.2 Taxa representation by study motivation
 
 Making a data set that looks at relative representation by each motivation, and the total
 
@@ -1063,7 +1062,7 @@ ggsave("spp_class_use_motivation_fig.pdf", plot = class_use_motivation_fig, widt
 ```
 
 
-### 13.3.3 Most common species 
+### 12.3.3 Most common species 
 
 Let's see what the most common species were. This is calculated at the population level (i.e. doesn't count each species mutiple times if multiple compounds were used in a single article; unique_population_id)
 
@@ -1316,7 +1315,7 @@ EIPAAB_database %>%
 ```
 
 
-## 13.4 Species habitat
+## 12.4 Species habitat
 
 First checking how many species have IUCN data, which we will use to assess habitat differences
 
@@ -1501,7 +1500,7 @@ ggsave("spp_habitat_info_fig.pdf", plot = habitat_info_fig, width = 5, height = 
 ```
 
 
-## 13.5 Species life satge 
+## 12.5 Species life satge 
 
 Let's get an overall summary first, without Unknown or not specified life stages
 
@@ -1645,7 +1644,7 @@ setwd(figures_path)
 ggsave("spp_stage_info_fig.pdf", plot = stage_info_fig, width = 2.5, height = 5)
 ```
 
-## 13.6 Species sex 
+## 12.6 Species sex 
 
 First overall breakdown by female and male without including unreported or hermaphroditic animals
 
@@ -1796,7 +1795,7 @@ setwd(figures_path)
 ggsave("spp_sex_info_fig.pdf", plot = sex_info_fig, width = 2.5, height = 5)
 ```
 
-## 13.7 Species source
+## 12.7 Species source
 
 Breakdown without unreported 
 
@@ -1947,9 +1946,9 @@ ggsave("spp_source_info_fig.pdf", plot = source_info_fig, width = 5, height = 10
 ```
 
 
-# 14 Compounds 
+# 13 Compounds 
 
-## 14.1 Number of compounds in database
+## 13.1 Number of compounds in database
 
 There are 426 distinct compounds in the database
 
@@ -1960,7 +1959,7 @@ EIPAAB_database %>%
 ```
 
 
-### 14.1.1 Number of compounds per study
+### 13.1.1 Number of compounds per study
 
 ```{r}
 article_n <- EIPAAB_database %>% 
@@ -2041,7 +2040,7 @@ setwd(figures_path)
 ggsave("comp_compound_n_fig.pdf", plot = compound_n_fig, width = 10, height = 5)
 ```
 
-## 14.2 Therputic diversity in the database
+## 13.2 Therputic diversity in the database
 
 First lets see how many compounds have an ATC classification. 
 
@@ -2058,7 +2057,7 @@ EIPAAB_database %>%
 ```
 
 
-### 14.2.1 ATC level 1
+### 13.2.1 ATC level 1
 
 Let's seem how many classes there are at the Anatomical Therapeutic Chemical (ATC) level 1 
 
@@ -2157,7 +2156,7 @@ setwd(figures_path)
 ggsave("comp_atc_level_1_fig.pdf", plot = atc_level_1_fig, width = 10, height = 10)
 ```
 
-### 14.2.2 ATC level 3
+### 13.2.2 ATC level 3
 
 
 Let's seem how many classes there are at the Anatomical Therapeutic Chemical (ATC) level 3
@@ -2272,7 +2271,7 @@ ggsave("atc_level_3_fig.pdf", plot = atc_level_3_fig, width = 10, height = 5)
 ```
 
 
-## 14.3 Most common compounds 
+## 13.3 Most common compounds 
 
 Overall the most common compounds are Fluoxetine, Diazepam and 17-alpha-ethinylestradiol
 
@@ -2417,7 +2416,7 @@ compound_use_motivation %>%
   dplyr::filter(compound_name == "17-alpha-ethinylestradiol")
 ```
 
-## 14.4 Mixtures
+## 13.4 Mixtures
 
 It was recorded whether the animals were also exposed to compound mixtures
 
@@ -2446,7 +2445,7 @@ EIPAAB_database %>%
                  )
 ```
 
-## 14.6 Exposure route
+## 13.6 Exposure route
 
 Data on the method of exposure was also extracted
 
@@ -2461,7 +2460,7 @@ EIPAAB_database %>%
 )
 ```
 
-## 14.7 Exposure length
+## 13.7 Exposure length
 
 The database has both the minimum and maximum duration of exposure prior to behavioural measure
 (compound_min_duration_exposure and compound_max_duration_exposure). Here we will focus on the maximum duration
@@ -2617,7 +2616,7 @@ ggsave("comp_exp_duration_med_fig.pdf", plot = exp_duration_med_fig, width = 8.3
 ggsave("comp_exp_duration_base_fig.pdf", plot = exp_duration_base_fig, width = 8.3/3, height = 11.7/3)
 ```
 
-## 14.8 Number of doses
+## 13.8 Number of doses
 
 Here I will look at the number of doses used. This was meassured as the total treatments (i.e. inculding control), so if we want to know the number of doses for the compound we need to subtract 1. I have done this below.
 
@@ -2925,7 +2924,7 @@ env_conc_summary <- EIPAAB_database %>%
 env_conc_summary
 ```
 
-## 14.9 Exposure location
+## 13.9 Exposure location
 
 Where the exposure itself was conducted
 
@@ -2937,9 +2936,9 @@ EIPAAB_database %>%
                 perecent = round(n/total*100,1))
 ```
 
-# 15 Behaviour
+# 14 Behaviour
 
-## 15.1 Counts of catagoires
+## 14.1 Counts of catagoires
 
 First I will make a new variable called beahv_catgory_n, which will look at how many of our 10 broad behavioural categories were measured in the article. 
 
@@ -3064,7 +3063,7 @@ setwd(figures_path)
 ggsave("behav_motivation_fig.pdf", plot = behav_motivation_fig, width = 10, height = 5)
 ```
 
-## 15.2 Behaviour sub-categories
+## 14.2 Behaviour sub-categories
 
 ```{r}
 behav_select <- EIPAAB_database %>% 
@@ -3111,7 +3110,7 @@ ring_plot_subcat <- behav_sub_cat_summary %>%
   dplyr::ungroup()
 ```
 
-### 15.2.1 Movement plots 
+### 14.2.1 Movement plots 
 
 First making a complete dataset (adding zeros for missing sub-categories. in each motivation), and ordering by overall prevalence of sub-categories.
 
@@ -3186,7 +3185,7 @@ movement_subcat %>%
   theme(legend.position = "bottom")
 ```
 
-### 15.2.2 Boldness plots 
+### 14.2.2 Boldness plots 
 
 ```{r}
 sub_category_order <- behav_sub_cat_summary %>% 
@@ -3237,7 +3236,7 @@ ggsave("beh_boldness_subcat_fig.pdf", plot = beh_boldness_subcat_fig, width = 10
 ```
 
 
-### 15.2.3 Foraging plots 
+### 14.2.3 Foraging plots 
 
 ```{r}
 sub_category_order <- behav_sub_cat_summary %>% 
@@ -3287,7 +3286,7 @@ ggsave("beh_foraging_subcat_fig.pdf", plot = beh_foraging_subcat_fig, width = 10
 ```
 
 
-### 15.2.4 Antipredator plots 
+### 14.2.4 Antipredator plots 
 
 ```{r}
 sub_category_order <- behav_sub_cat_summary %>% 
@@ -3337,7 +3336,7 @@ ggsave("beh_antipredator_subcat_fig.pdf", plot = beh_antipredator_subcat_fig, wi
 ```
 
 
-### 15.2.5 Mating plots 
+### 14.2.5 Mating plots 
 
 ```{r}
 sub_category_order <- behav_sub_cat_summary %>% 
@@ -3390,7 +3389,7 @@ ggsave("beh_mating_subcat_fig.pdf", plot = beh_mating_subcat_fig, width = 10, he
 ```
 
 
-### 15.2.6 Post mating plots 
+### 14.2.6 Post mating plots 
 
 ```{r}
 sub_category_order <- behav_sub_cat_summary %>% 
@@ -3441,7 +3440,7 @@ ggsave("beh_post_mating_subcat_fig.pdf", plot = beh_post_mating_subcat_fig, widt
 ```
 
 
-### 15.2.7 Agression plots 
+### 14.2.7 Agression plots 
 
 ```{r}
 sub_category_order <- behav_sub_cat_summary %>% 
@@ -3492,7 +3491,7 @@ ggsave("beh_agression_subcat_fig.pdf", plot = beh_agression_subcat_fig, width = 
 ```
 
 
-### 15.2.8 Sociality plots 
+### 14.2.8 Sociality plots 
 
 ```{r}
 sub_category_order <- behav_sub_cat_summary %>% 
@@ -3543,7 +3542,7 @@ ggsave("beh_sociality_subcat_fig.pdf", plot = beh_sociality_subcat_fig, width = 
 ```
 
 
-### 15.2.9 Cognition plots 
+### 14.2.9 Cognition plots 
 
 ```{r}
 sub_category_order <- behav_sub_cat_summary %>% 
@@ -3593,7 +3592,7 @@ setwd(figures_path)
 ggsave("beh_cognition_subcat_fig.pdf", plot = beh_cognition_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
-### 15.2.10 Non-categories plots 
+### 14.2.10 Non-categories plots 
 
 ```{r}
 sub_category_order <- behav_sub_cat_summary %>% 
@@ -3644,7 +3643,7 @@ ggsave("beh_noncat_subcat_fig.pdf", plot = beh_noncat_subcat_fig, width = 10, he
 ```
 
 
-## 15.3 Behaviour location 
+## 14.3 Behaviour location 
 
 Check where behaviour was meassured.
 
@@ -3675,7 +3674,7 @@ behav_location_summary
 ```
 
 
-## 15.4 Social context
+## 14.4 Social context
 
 Check how often behaviour was measured in a social context
 
@@ -3703,7 +3702,7 @@ behav_social_context_summary
 ```
 
 
-## 15.5 Check how behaviour was meassured
+## 14.5 Check how behaviour was meassured
 
 Check how often behaviour was meassured in a social context
 
@@ -3741,7 +3740,7 @@ behav_behav_scoring_summary %>%
   dplyr::filter(study_motivation  == "Overall")
 ```
 
-# 16 Linking PICO
+# 15 Linking PICO
 
 Making a dataframe for a flow diagram (sankey plot)
 
@@ -3760,7 +3759,6 @@ PICO_df <- EIPAAB_database %>%
     behav_noncat_boolean == 1 ~ "Not categorised",
   )) %>% 
   dplyr::select(study_motivation, compound_name, compound_atc_level_3, species_name, species_class, behav_cat) 
-PICO_df
 ```
 
 Let's look at the 10 most common classes and ATCs
@@ -3828,7 +3826,7 @@ webshot::webshot("PICO_atc_class_sankey.html" , "PICO_atc_class_sankey.pdf", del
 ```
 
 
-## 16.1 Common compounds
+## 15.1 Common compounds
 
 Lets take a closer look at the 3 most common compounds
 
@@ -3841,7 +3839,7 @@ EIPAAB_database %>%
 ```
 
 
-### 16.1.1 Fluoxetine 
+### 15.1.1 Fluoxetine 
 
 ```{r}
 spp_order <- PICO_df %>% 
@@ -3894,7 +3892,7 @@ webshot::webshot("PICO_fluoxetine_sankey.html" , "PICO_fluoxetine_sankey.pdf", d
 ```
 
 
-### 16.1.2 Diazepam 
+### 15.1.2 Diazepam 
 
 ```{r}
 spp_order <- PICO_df %>% 
@@ -3941,7 +3939,7 @@ webshot::webshot("PICO_diazepam_sankey.html" , "PICO_diazepam_sankey.pdf", delay
 ```
 
 
-### 16.3.1 17-alpha-ethinylestradiol 
+### 15.3.1 17-alpha-ethinylestradiol 
 
 ```{r}
 spp_order <- PICO_df %>% 
@@ -3987,13 +3985,13 @@ setwd(figures_path)
 webshot::webshot("PICO_EE2_sankey.html" , "PICO_EE2_sankey.pdf", delay = 10)
 ```
 
-# 17 Knowledge clusters and gaps
+# 16 Knowledge clusters and gaps
 
 Identify knowledge clusters and gaps.
 
 We will also do this by study motivation, because the knowleage gaps will be motivation spesfic. 
 
-## 17.1 Species class
+## 16.1 Species class
 
 First look by species class
 
@@ -4082,7 +4080,7 @@ ggsave("behav_class_rel_hm.pdf", plot = behav_class_rel_hm, width = 8.3, height 
 ```
 
 
-## 17.2 Compound cluster/gaps
+## 16.2 Compound cluster/gaps
 
 Now looking by compound
 
@@ -4180,7 +4178,7 @@ ggsave("behav_class__rel_hm.pdf", plot = behav_class__rel_hm, width = 8.3, heigh
 
 
 
-# 18 Additional biomarkers
+# 17 Additional biomarkers
 
 ```{r}
 EIPAAB_database %>% 
@@ -4203,14 +4201,14 @@ EIPAAB_database %>%
                 percent = n/total)
 ```
 
-# 19 Validity
+# 18 Validity
 
 
 This a list of all 19 metadata that relate to our validity information.
 
 c("validity_guideline", "validity_good_laboratory_practice", "validity_survival_growth_reproduction", "validity_animal_feeding", "validity_water_quality", "validity_light_cycle", "validity_randomization", "validity_behav_scoring_method", "validity_behav_blinding", "validity_conflict_statement", "species_source", "species_stage", "species_sex", "compound_min_duration_exposure", "compound_max_duration_exposure", "validity_compound_cas_reported", "validity_compound_purity_reported", "validity_compound_water_verification", "validity_compound_animal_verification")
 
-## 19.1 Did it follow a guideline (CRED Q1)
+## 18.1 Did it follow a guideline (CRED Q1)
 
 ```{r}
 guideline <- EIPAAB_database %>%
@@ -4238,7 +4236,7 @@ guideline_all
 ```
 
 
-## 19.2 Did it use good laboratory practice (CRED Q2)
+## 18.2 Did it use good laboratory practice (CRED Q2)
 
 ```{r}
 GLP <- EIPAAB_database %>%
@@ -4266,7 +4264,7 @@ GLP_all
 ```
 
 
-## 19.3 Did it report survival, growth and/or reproduction (CRED Q3)
+## 18.3 Did it report survival, growth and/or reproduction (CRED Q3)
 
 
 ```{r}
@@ -4295,7 +4293,7 @@ survival_growth_reproduction_all
 ```
 
 
-## 19.4 Did it report compound cas (CRED Q5)
+## 18.4 Did it report compound cas (CRED Q5)
 
 ```{r}
 CAS <- EIPAAB_database %>%
@@ -4322,7 +4320,7 @@ CAS_all <- rbind(CAS_all, CAS)  %>%
 CAS_all
 ```
 
-## 19.5 Did it report compound purity (CRED Q6)
+## 18.5 Did it report compound purity (CRED Q6)
 
 ```{r}
 purity <- EIPAAB_database %>%
@@ -4349,9 +4347,9 @@ purity_all <- rbind(purity_all, purity) %>%
 purity_all
 ```
 
-## 19.6 Species infomartion  (CRED Q8)
+## 18.6 Species infomartion  (CRED Q8)
 
-### 19.6.1 Life stage
+### 18.6.1 Life stage
 
 ```{r}
 stage <- EIPAAB_database %>%
@@ -4381,7 +4379,8 @@ stage_all <- rbind(stage_all, stage) %>%
   dplyr::mutate(percent_reported = 100-percent)
 stage_all
 ```
-### 19.6.1 Sex
+
+### 18.6.1 Sex
 
 ```{r}
 sex <- EIPAAB_database %>%
@@ -4412,7 +4411,7 @@ sex_all <- rbind(sex_all, sex) %>%
 sex_all
 ```
 
-## 19.7 The soruce of species (CRED Q9)
+## 18.7 The soruce of species (CRED Q9)
 
 ```{r}
 source <- EIPAAB_database %>%
@@ -4443,9 +4442,9 @@ source_all <- rbind(source_all, source) %>%
 source_all
 ```
 
-## 19.8 experimental system (CRED Q11)
+## 18.8 experimental system (CRED Q11)
 
-### 19.8.1 Feeding
+### 18.8.1 Feeding
 
 
 ```{r}
@@ -4472,7 +4471,8 @@ feeding_all <- rbind(feeding_all, feeding) %>%
   dplyr::filter(validity_animal_feeding == "Yes")
 feeding_all
 ```
-### 19.8.1 Water quality
+
+### 18.8.1 Water quality
 
 ```{r}
 water <- EIPAAB_database %>%
@@ -4498,7 +4498,8 @@ water_all <- rbind(water_all, water) %>%
   dplyr::filter(validity_water_quality == "Yes")
 water_all
 ```
-### 19.8.1 light cycle
+
+### 18.8.1 light cycle
  
 ```{r}
 light <- EIPAAB_database %>%
@@ -4526,9 +4527,9 @@ light_all
 ```
 
 
-## 19.9 Exposure duration (CRED Q14)
+## 18.9 Exposure duration (CRED Q14)
 
-## 19.9.1 Minimum duration
+## 18.9.1 Minimum duration
 
 
 ```{r}
@@ -4553,7 +4554,8 @@ min_duration_all <- rbind(min_duration_all, min_duration) %>%
   dplyr::mutate(percent_reported = 100-percent)
 min_duration_all
 ```
-## 19.9.2 Maximum duration
+
+## 18.9.2 Maximum duration
 
 ```{r}
 max_duration <- EIPAAB_database %>%
@@ -4578,9 +4580,9 @@ max_duration_all <- rbind(max_duration_all, max_duration) %>%
 max_duration_all
 ```
 
-## 19.10 Exposure verification (CRED Q15)
+## 18.10 Exposure verification (CRED Q15)
 
-## 19.10.1 Water verification
+## 18.10.1 Water verification
 
 ```{r}
 water_verification <- EIPAAB_database %>%
@@ -4604,7 +4606,8 @@ water_verification_all <- rbind(water_verification_all, water_verification) %>%
   dplyr::filter(validity_compound_water_verification == "Measured")
 water_verification_all
 ```
-## 19.10.1 Tissue verification
+
+## 18.10.1 Tissue verification
 
 ```{r}
 tissue_verification <- EIPAAB_database %>%
@@ -4630,7 +4633,7 @@ tissue_verification_all
 ```
 
 
-## 19.11 Randomization (Not CRED)
+## 18.11 Randomization (Not CRED)
 
 ```{r}
 randomization <- EIPAAB_database %>%
@@ -4658,7 +4661,7 @@ randomization_all <- rbind(randomization_all, randomization) %>%
 randomization_all
 ```
 
-## 19.12 Blinding (Not CRED)
+## 18.12 Blinding (Not CRED)
 
 ```{r}
 blinding <- EIPAAB_database %>%
@@ -4685,7 +4688,7 @@ blinding_all <- rbind(blinding_all, blinding) %>%
 blinding_all
 ```
 
-## 19.13 Scoring method (Not CRED)
+## 18.13 Scoring method (Not CRED)
 
 ```{r}
 behav_scoring <- EIPAAB_database %>%
@@ -4714,8 +4717,7 @@ behav_scoring_all <- rbind(behav_scoring_all, behav_scoring) %>%
 behav_scoring_all
 ```
 
-## 19.14 Conflict statement (Not CRED)
-
+## 18.14 Conflict statement (Not CRED)
 
 ```{r}
 conflict <- EIPAAB_database %>%
