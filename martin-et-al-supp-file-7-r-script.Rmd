@@ -1,0 +1,4744 @@
+---
+title: "EIPAAB_data_summary"
+author: "Jake Martin"
+date: "2024-04-24"
+output: html_document
+---
+
+# 1 READ ME
+
+# 2 Welocme
+
+This is the the R markdown script written in R studio (2023.09.0+463 "Desert Sunflower" Release) used to summarise the systematic map database from Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour (EIPAAB): a systematic map and open access database" (doi: XXXXX). 
+
+It is designed to act as a starting point for anyone who wishes to use the 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database for their own projects. 
+
+This script was authored by Jake M Martin (jakemartin.org)
+
+Contact: jake.martin@deakin.edu or jake.martin@slu.se
+*P.s Apologies for any spelling mistakes in the script I am dyslexic and this is a very long document 
+
+# 3 R informartion
+
+If you are not familiar with R, here's a beginners guide (https://www.youtube.com/watch?v=_V8eKsto3Ug). 
+
+Here's a link to download R (https://cran.r-project.org/) and R studio (https://posit.co/products/open-source/rstudio/), and a guide on how to do so.
+
+This is an R markdown file, which makes annotating and running R code more user friendly, it is also easy to reproducible and share in a variate of formates (e.g. PDF). The R code is embed within chunks, and the output for code will be embedded under the chuck.
+
+```{r} 
+# This is a chuck
+```
+
+All other text outside of the chucks are annotations (like this). Hashtags used outside of chucks are used to create headers and to structure the file. Hashtags within the chucks are used for more precise annotation within the code.
+
+If you are not familiar with R markdown, here's a guide (https://www.youtube.com/watch?v=tKUufzpoHDE)
+
+# 4 Directories
+
+Creating out input and output directories. They will be made within the current parent directory (i.e. where the R sciprt is saved)
+
+This is code creates a folder and saves the directory as figure_path. This is where we will export our figures
+
+```{r}
+figures_path <- paste0(getwd(), "/figures")
+
+if (!dir.exists(figures_path)) {
+  dir.create(figures_path)
+}
+```
+
+This is code creates a folder and saves the directory as output_path This is where we will export our data
+
+```{r}
+output_path <- paste0(getwd(), "/output-data")
+
+if (!dir.exists(output_path)) {
+  dir.create(output_path)
+}
+```
+
+Input directory 
+
+```{r}
+input_path <- paste0(getwd(), "/input-data")
+
+if (!dir.exists(figures_path)) {
+  dir.create(figures_path)
+}
+```
+
+# 4 Database informartion
+
+The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 96 columns and 1754 rows. The columns represent various forms of metadata extracted from articles that were included in Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour: a systematic map and open access database" (doi: XXXXX).
+
+The READ-ME file which explains what each metadata is, how it was extracted, what structure it has, and at what level it applies, is available at XXX. Below I have imported the read me for accessibility. I highly recommend you read the READ-ME before conducting any of your own meta-analysis to make sure you have interoperated the data correctly.  
+
+More generally, column names that start with 'validity' are metadata relating to study validity, those that start with 'specie's relate to species information (population), those that start with 'compound' relate to the chemical information (exposure), those that start with 'behav' relate to behaviour information (outcome). The order of columns reflects both the level the metadata is extracted at (i.e. article level or species by compound level; see level in READ-ME), as well as the general category of metadata (i.e. validity, species, compound, behaviour).
+
+```{r, warning=FALSE}
+setwd(input_path)
+
+READ_ME <- read.csv("READ-ME.csv", na = "NA") # loading the READ-ME file
+
+READ_ME # Outputting the READ-ME file as a tibble
+```
+
+# 5 Required R packages
+
+These are the R packages required to run the script. I have added them to a list so that I can install them all in one go using the function below called loaded_packages. This function I have made will load all the packages in the list below, if the packages are not already installed, this function will first install them.
+
+If you want to install and load each package separately, you can use the code install.packages() and require(), I have given a example below.
+
+```{r}
+required_packages <- c("tidyverse", 
+                       "ggraph", 
+                       "igraph", 
+                       "ggrepel", 
+                       "RColorBrewer",
+                       "ggtree",
+                       "treeio",
+                       "ape",
+                       "gridExtra",
+                       "ggdist",
+                       "highcharter"
+                       )
+
+# Alternatively, you can install an load them one by one
+# install.packages("tidyverse")
+# require("tidyverse")
+```
+
+
+This is the function to load all packages (and install if necessary) in the list above.
+
+type = 'source' instructs R to download and install the package from its source code rather than from a precompiled binary, this is optional.
+
+
+```{r, message=FALSE, results='hide'}
+loaded_packages <- lapply(required_packages, function(package) {
+  if (!require(package, character.only = TRUE)) {
+    install.packages(package, type = 'source') # type = 'source' is optional
+    if (!require(package, character.only = TRUE)) {
+      return(FALSE)
+    }
+  }
+  return(TRUE)
+})
+
+# Check if all packages are loaded successfully
+if (all(unlist(loaded_packages))) {
+  cat("All packages loaded\n")
+} else {
+  cat("Some packages failed to load or install\n")
+}
+```
+
+For ggtree and treeio you may need to run this code for instillation 
+
+```{r}
+# if (!requireNamespace("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager")
+# 
+# BiocManager::install("ggtree")
+```
+
+
+
+# 8 Importing EIPAAB database
+
+Importing the EIPAAB-database.csv database (accessed from: https://osf.io/atwy6/).
+
+If the CSV files are in the same working directory (wd) as this R script, you will not need to use setwd(), but if the files are located elsewhere you will need to specify this in setwd(), and run all lines at once. In R markdown the working directory changes back to default after the chuck is run.
+
+```{r, warning=FALSE}
+setwd(input_path)
+
+EIPAAB_database <- read.csv("EIPAAB-database.csv", na = "NA")
+```
+
+
+# 9 Total numbers
+
+The first thing we will look at is how many unique (distinct) articles there are in the database, and how many rows of data there are.
+
+There are 901 articles, with 1740 rows.
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::distinct(article_id) %>% # Returns a list of distinct article_id
+  nrow(.) # Returns the length of the current file (which is the list of distinct article_id)
+
+EIPAAB_database %>% 
+  nrow(.) # Returns the length of the current file (which is the length of the whole datafile)
+```
+
+Each row represent a unique species by compound combination within a given article. This is represented by the column unique_row_id This is a combination of the extractors response id, specie,s and compound. For example, R_0Bqz2RQ4JxPfBkZ_Danio_rerio_Diazepam, response id = R_0Bqz2RQ4JxPfBkZ, species = Danio rerio, and compound = Diazepam
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::select(unique_row_id) %>% # selects just the unique_column_id column
+  dplyr::arrange(unique_row_id) %>% # arranges the column alphabetically so the same examples will be given everytime 
+  dplyr::slice(1:10) # Returns only the first 10 rows
+```
+
+Now the number of total treatments represented in the data, this is the total number of unique doses per species by compound combination.
+
+In the map the number of treatments was only extracted for water-borne exposures, the NAs, represent other exposure routes. Therefore, the number of water-borne exposures treatments are 6294, and there are an additional 226 articles that don't have treatment numbers. We know they all have at least two treatments, a control and a compound of interest, because that is part of the inclusion criteria. So we could add the number of NAs * 2 to the total, this would be 6746 total treatment groups. Although, this would likely be an underestimate of the true total.
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::summarise(
+    groups = sum(compound_treatment_levels, na.rm = TRUE), # Calculate the sum of 'compound_treatment_levels' while ignoring NA values
+    nas = sum(is.na(compound_treatment_levels)), # Count the number of NA values in 'compound_treatment_levels'
+    total = groups + (nas * 2) # Calculate the total by adding 'groups' to twice the number of NAs
+  )
+```
+
+# 10 Study motivation
+
+Let's look at how the evidence collected breaks down by the three study motivations
+
+```{r}
+total_atricles <- EIPAAB_database %>% 
+  dplyr::distinct(article_id) %>% 
+  nrow()
+
+# Analyze the study motivations in the dataset
+EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% # Group the data by 'article_id'
+  dplyr::sample_n(1) %>% # Randomly sample one row from each group (i.e., each unique 'article_id')
+  dplyr::ungroup() %>% # Ungroup the data to remove the previous grouping
+  dplyr::group_by(study_motivation) %>% # Group the data by 'study_motivation'
+  dplyr::reframe( # Create a summary data frame with the count and percentage of each study motivation
+    n = length(study_motivation),  # Count the number of occurrences of each study motivation
+    `%` = round(n / total_atricles, 3) * 100  # Calculate the percentage of total articles
+  ) %>% 
+  dplyr::arrange(desc(n)) # Arrange the resulting data frame in descending order of the count
+```
+
+Here we are changing the order of these in the database to "Environmental", "Medical", "Basic research" for plots.
+
+```{r}
+EIPAAB_database <- EIPAAB_database %>%
+  dplyr::mutate(study_motivation = fct_relevel(study_motivation, "Environmental", "Medical", "Basic research"))
+```
+
+# 11 Publications by year
+
+## 11.1 Number per year
+
+Year range is 1974 to 2022, so 48 years worth of empirical research has contributed to this evidence base.
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::reframe(min_year = min(year),
+                 max_year = max(year),
+                 total_years = max_year-min_year)
+```
+
+Now making a summary for the number of publications per year based on study motivation
+
+```{r}
+# Create a complete sequence of years and all unique study motivations
+all_years <- as.character(1974:2022)
+all_study_motivations <- unique(EIPAAB_database$study_motivation)
+
+# Create a data frame with all combinations of year and study motivation
+all_combinations <- expand.grid(year = all_years, study_motivation = all_study_motivations, stringsAsFactors = FALSE)
+
+# Summarize the data
+pub_year <- EIPAAB_database %>% 
+  group_by(year, study_motivation) %>% 
+  summarize(n = length(unique(article_id)), .groups = 'drop') %>% 
+  mutate(year = as.character(year))
+
+# Join with the complete grid of years and study motivations
+pub_year_complete <- all_combinations %>%
+  left_join(pub_year, by = c("year", "study_motivation")) %>%
+  mutate(n = if_else(is.na(n), 0, n),
+         year = as.numeric(year))
+```
+
+Here's a summary figure for the manuscript (MS). 
+
+```{r}
+# Define the colour palette
+motivation_colour_theme <- c("#60BD6C", "#D359A1", "#3C82C4") # Making colour theme to apply to plot
+
+# Create the plot
+pub_year_fig <- pub_year_complete %>%
+  # Group years before 1996 and reformat the year column
+  dplyr::mutate(
+    year = as.character(if_else(year < 1996, 1996, year)), # Grouping years before 1996
+    year = if_else(year == "1996", "<1997", year)          # Renaming 1995 group to "<1996"
+  ) %>%
+  # Creating the plot
+  ggplot(aes(y = n, x = year, fill = study_motivation)) +
+  geom_bar(stat = "identity", width = 0.9) +
+  # Apply the custom colours
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") + 
+  theme_classic() +
+  # Customizing the theme
+  theme(
+    legend.position = c(0.05, 1), # Positioning the legend in the top-left corner within the plot
+    legend.justification = c(0, 1), # Ensuring the legend box aligns properly at the top-left corner
+    axis.text.x = element_text(angle = 90, vjust = 0.5) # Rotating x-axis labels for better readability
+  ) +
+  # Adding axis labels
+  labs(
+    x = "Year of publication",
+    y = "Number of articles"
+  )
+
+# Display the plot
+pub_year_fig
+```
+
+Saving the figure as a PDF
+
+```{r, warning=FALSE}
+setwd(figures_path)
+#ggsave("pub_year_fig.png", plot = pub_year_fig, width = 10, height = 5, dpi = 300) #if you want to save a png
+ggsave("study_pub_year_fig.pdf", plot = pub_year_fig, width = 10, height = 5)
+```
+
+## 11.2 Cumulative and relative growth
+
+Making values for cumulative and relative growth in articles. This is the cumulative number of articles per year for each study moitvation, as well as the relative growth based on 2007. We selected 2007 for a 15 year overview in growth.
+
+```{r}
+pub_year_growth <- pub_year_complete %>%
+  dplyr::group_by(study_motivation) %>%
+  dplyr::mutate(
+    n_cumulative = cumsum(n),  # Calculate the cumulative sum of 'n'
+    n_cumulative_prop = n_cumulative / max(n_cumulative), # Calculate the cumulative proportion
+    n_2007 = ifelse(year == 2007, n, NA_real_), # Get n value for year 2007
+    n_2007 = first(na.omit(n_2007)), # Propagate the n_2012 value within the group
+    n_ratio_to_2007 = n / n_2007 # Calculate number of articles relative to that of 2007
+  ) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(study_motivation, year, n, n_cumulative, n_cumulative_prop, n_ratio_to_2007)
+```
+
+Making a plot for each motivation cumulative growth since 1974 (the first identified study)
+
+```{r}
+cumulative_articles_fig <- pub_year_growth %>% 
+  ggplot(aes(y = n_cumulative, x = year, colour = study_motivation)) +
+  geom_line(stat = "identity", linewidth = 1.5) +
+  geom_hline(yintercept = 0) +
+  scale_x_continuous(breaks = seq(1974, 2022, by = 1)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  # Customizing the theme
+  theme(
+    legend.position = c(0.05, 1), # Positioning the legend in the top-left corner within the plot
+    legend.justification = c(0, 1), # Ensuring the legend box aligns properly at the top-left corner
+    axis.text.x = element_text(angle = 90, vjust = 0.5) # Rotating x-axis labels for better readability
+  ) +
+  # Adding axis labels
+  labs(
+    x = "Year of publication",
+    y = "Articles cumulative growth"
+  )
+
+cumulative_articles_fig
+```
+
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("study_cumulative_articles_fig.pdf", plot = cumulative_articles_fig, width = 10, height = 5)
+```
+
+## 11.3 Reltive growth
+
+Let's look at relative growth compared to the research area more broadly 
+
+I will identify the most common research area based on each study motivation.
+
+Environmental motivation = Environmental Sciences & Ecology
+Medical motivation = Neurosciences & Neurology
+Basic research = Neurosciences & Neurology
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation, wos_research_areas) %>% 
+  dplyr::reframe(n = length(doi)) %>%
+  dplyr::mutate(wos_research_areas = str_trim(wos_research_areas)) %>%
+  tidyr::separate_rows(wos_research_areas, sep = ";") %>% 
+  dplyr::mutate(wos_research_areas = str_trim(wos_research_areas)) %>% 
+  dplyr::group_by(study_motivation, wos_research_areas) %>% 
+  dplyr::reframe(n_total = sum(n)) %>% 
+  dplyr::arrange(desc(n_total)) %>% 
+  dplyr::arrange(study_motivation) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::slice(1:2) %>% 
+  dplyr::ungroup()
+```
+
+We will now compare the proportion cumulative growth of each study motivation against the most common research areas based on WoS. 
+
+I have searched  articles published within these research areas from 1992-2022, and create a database to compare against.
+
+Each search indued only a date range (e.g. PY=(1992-2021)) AND the given web of science resarch area (e.g. WC=(Pharmacology & Pharmacy)). Searchers were done on the 04/07/2024. Only the total number of articles each year was taken. 
+
+First we will import the research field annual number of articles database I create (martin-et-al-supp-file-9-wos-research-areas-1992-2022.csv). It is provide as supplementary file 9.
+
+```{r, warning=FALSE}
+setwd(input_path)
+
+wos_research_areas_n <- read.csv("martin-et-al-supp-file-9-wos-research-areas-1992-2022.csv") %>% 
+  dplyr::arrange(year) %>%
+  dplyr::group_by(research_area) %>%
+  dplyr::mutate(
+    n_cumulative = cumsum(n),  # Calculate the cumulative sum of 'n'
+    n_cumulative_prop = n_cumulative / max(n_cumulative), # Calculate the cumulative proportion
+    n_2007 = ifelse(year == 2007, n, NA_real_), # Get n value for year 2011
+    n_2007= first(na.omit(n_2007)), # Propagate the n_2011 value within the group
+    n_ratio_to_2007 = n / n_2007 # Calculate n_ratio_to_2000
+  ) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(research_area, year, n, n_cumulative, n_cumulative_prop, n_ratio_to_2007)
+```
+
+
+Combined the number of articles with those in the EIPAAB database
+
+```{r}
+pub_year_growth_comp <- pub_year_growth %>% 
+  dplyr::rename(research_area = study_motivation)
+
+wos_research_areas_comp <- wos_research_areas_n %>% 
+  rbind(., pub_year_growth_comp) %>% 
+  dplyr::mutate(research_area = factor(research_area, levels=c("Environmental", "Medical", "Basic research",
+                                                               "Environmental Sciences and Ecology", "Toxicology",
+                                                               "Neurosciences and Neurology", "Pharmacology and Pharmacy",
+                                                               "All Research Areas")))
+```
+
+
+Let's see what the relative growth was in 2022 (the latest included year in the evidence base)
+
+```{r}
+wos_research_areas_comp %>% 
+  dplyr::filter(year == 2022)
+```
+
+
+### 11.3.1 Enviormental relative growth
+
+Let's now compare the relative growth in Environmental research 
+
+```{r}
+# Define the colour palette
+env_colour_theme <- c("#60BD6C", "#2E4B22", "black") # Making colour theme to apply to plot
+
+enviro_comp <-  c("Environmental", "Environmental Sciences and Ecology", "All Research Areas")
+
+line_types <- c("Environmental" = "solid", 
+                "Environmental Sciences and Ecology" = "dashed", 
+                "All Research Areas" = "solid")
+
+relative_growth_env_fig <- wos_research_areas_comp %>% 
+  dplyr::filter(research_area %in% enviro_comp, year > 2006) %>% 
+  ggplot(aes(y = n_ratio_to_2007, x = year, colour = research_area, linetype = research_area)) +
+  geom_line(stat = "identity", linewidth = 1.5) +
+  scale_x_continuous(breaks = seq(2007, 2022, by = 1)) +
+  scale_y_continuous(limits = c(0, 22), breaks = seq(0, 22, by = 4)) + # Scale Y axis from 0 to 22
+  scale_colour_manual(values = env_colour_theme, name = "Research Area") +
+  scale_linetype_manual(values = line_types) + # Apply manual line types
+  guides(linetype = "none") + # Remove legend for line types
+  theme_classic() +
+  # Customizing the theme
+  theme(
+    legend.position = c(0.05, 1), # Positioning the legend in the top-left corner within the plot
+    legend.justification = c(0, 1), # Ensuring the legend box aligns properly at the top-left corner
+    axis.text.x = element_text(angle = 90, vjust = 0.5) # Rotating x-axis labels for better readability
+  ) +
+  # Adding axis labels
+  labs(
+    x = "Year of publication",
+    y = "Relative growth compared to 2007 (15 year baseline)"
+  )
+
+relative_growth_env_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("study_relative_growth_env_fig.pdf", plot = relative_growth_env_fig, width = 5, height = 5)
+```
+
+
+### 11.3.2 Medical relative growth
+
+Comparing the relative growth in medical research 
+
+```{r}
+# Define the colour palette
+med_colour_theme <- c("#D359A1", "#D2137F", "black") # Making colour theme to apply to plot
+
+med_comp <-  c("Medical", "Neurosciences and Neurology", "All Research Areas")
+
+line_types <- c("Medical" = "solid", 
+                "Neurosciences and Neurology" = "dashed", 
+                "All Research Areas" = "solid")
+
+relative_growth_med_fig <- wos_research_areas_comp %>% 
+  dplyr::filter(research_area %in% med_comp, year > 2006) %>% 
+  ggplot(aes(y = n_ratio_to_2007, x = year, colour = research_area, linetype = research_area)) +
+  geom_line(stat = "identity", linewidth = 1.5) +
+  scale_x_continuous(breaks = seq(2007, 2022, by = 1)) +
+  scale_y_continuous(limits = c(0, 22), breaks = seq(0, 22, by = 4)) + # Scale Y axis from 0 to 22
+  scale_colour_manual(values = med_colour_theme, name = "Research Area") +
+  scale_linetype_manual(values = line_types) + # Apply manual line types
+  guides(linetype = "none") + # Remove legend for line types
+  theme_classic() +
+  # Customizing the theme
+  theme(
+    legend.position = c(0.05, 1), # Positioning the legend in the top-left corner within the plot
+    legend.justification = c(0, 1), # Ensuring the legend box aligns properly at the top-left corner
+    axis.text.x = element_text(angle = 90, vjust = 0.5) # Rotating x-axis labels for better readability
+  ) +
+  # Adding axis labels
+  labs(
+    x = "Year of publication",
+    y = "Relative growth compared to 2007 (15 year baseline)"
+  )
+
+relative_growth_med_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("study_relative_growth_med_fig.pdf", plot = relative_growth_med_fig, width = 5, height = 5)
+```
+
+
+### 11.3.2 Basic resarch relative growth
+
+Comparing relative growth in basic research 
+
+```{r}
+# Define the colour palette
+basic_colour_theme <- c("#3C82C4", "#26276D", "black") # Making colour theme to apply to plot
+
+basic_comp <-  c("Basic research", "Neurosciences and Neurology", "All Research Areas")
+
+line_types <- c("Basic research" = "solid", 
+                "Neurosciences and Neurology" = "dashed", 
+                "All Research Areas" = "solid")
+
+relative_growth_base_fig <- wos_research_areas_comp %>% 
+  dplyr::filter(research_area %in% basic_comp, year > 2006) %>% 
+  ggplot(aes(y = n_ratio_to_2007, x = year, colour = research_area, linetype = research_area)) +
+  geom_line(stat = "identity", linewidth = 1.5) +
+  scale_x_continuous(breaks = seq(2007, 2022, by = 1)) +
+  scale_y_continuous(limits = c(0, 22), breaks = seq(0, 22, by = 4)) + # Scale Y axis from 0 to 22
+  scale_colour_manual(values = basic_colour_theme, name = "Research Area") +
+  scale_linetype_manual(values = line_types) + # Apply manual line types
+  guides(linetype = "none") + # Remove legend for line types
+  theme_classic() +
+  # Customizing the theme
+  theme(
+    legend.position = c(0.05, 1), # Positioning the legend in the top-left corner within the plot
+    legend.justification = c(0, 1), # Ensuring the legend box aligns properly at the top-left corner
+    axis.text.x = element_text(angle = 90, vjust = 0.5) # Rotating x-axis labels for better readability
+  ) +
+  # Adding axis labels
+  labs(
+    x = "Year of publication",
+    y = "Relative growth compared to 2007 (15 year baseline)"
+  )
+
+relative_growth_base_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("study_relative_growth_base_fig.pdf", plot = relative_growth_base_fig, width = 5, height = 5)
+```
+
+# 12 Population, Exposure and Outcome
+
+Looking at the link between the PEO elements. What was the average study design.
+
+Below I have made a table that groups by these elements to see the average study design
+
+It was 1 compound, 1 species and 1 behavioural class (41%)
+
+```{r}
+behav_boolean <- c("behav_movement_boolean", "behav_boldness_boolean", "behav_foraging_boolean", "behav_antipredator_boolean", "behav_mating_boolean", "behav_post_mating_boolean", "behav_agression_boolean", "behav_sociality_boolean", "behav_cognition_boolean", "behav_noncat_boolean")
+
+EIPAAB_database %>%
+  dplyr::mutate(behav_n = rowSums(across(all_of(behav_boolean)), na.rm = TRUE)) %>% # how many behav class measured
+  dplyr::group_by(article_id) %>% 
+  dplyr::arrange(desc(behav_n)) %>% 
+  dplyr::slice(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(compound_n, species_n, behav_n) %>% 
+  dplyr::group_by(compound_n, species_n, behav_n) %>% 
+  dplyr::reframe(n= length(compound_n),
+                 '%' = round(n/902*100,1)) %>% 
+  dplyr::arrange(desc(n))
+```
+
+I summary df that has the number of PEO elements in each of the 901 studies 
+
+```{r}
+PEO_element_summary <- EIPAAB_database %>%
+  dplyr::mutate(behav_n = rowSums(across(all_of(behav_boolean)), na.rm = TRUE)) %>% 
+  dplyr::group_by(article_id) %>% 
+  dplyr::arrange(desc(behav_n)) %>% 
+  dplyr::slice(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(compound_n, species_n, behav_n)
+```
+
+Looking at the number of species used 
+
+```{r}
+PEO_element_summary %>% 
+  dplyr::group_by(species_n) %>% 
+  dplyr::reframe(n = length(species_n),
+                 '%' = n/901)
+```
+
+Looking at the number of compounds used 
+
+```{r}
+PEO_element_summary %>% 
+  dplyr::group_by(compound_n) %>% 
+  dplyr::reframe(n = length(compound_n),
+                 '%' = n/901)
+```
+
+```{r}
+PEO_element_summary %>% 
+  dplyr::group_by(behav_n) %>% 
+  dplyr::reframe(n = length(species_n),
+                 '%' = n/901)
+```
+
+# 13 Species
+
+Let's take a closer look at species information 
+
+## 13.1 Number of distict species
+
+There are 173 species in the EIPAAB database
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::distinct(species_name) %>% 
+  nrow()
+```
+
+The number of spp each study motivation
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::reframe(n_spp = length(unique(species_name)),
+                 total_study = length(unique(article_id)),
+                 rel_n = n_spp/total_study)
+```
+
+There are 21 class
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::distinct(species_class) %>% 
+  nrow()
+```
+
+There are 935 different groups of animals used across all 901 studies (i.e. some studies had more then one species) 
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::distinct(unique_population_id) %>% 
+  nrow(.)
+```
+
+
+## 13.2 Major taxa groups
+
+### 13.2.1 Cladogram (Taxonomic tree)
+
+Let's make a Cladogram to get an overview of what taxa are in the database
+
+```{r}
+spp_taxonomy <- EIPAAB_database %>%
+  dplyr::group_by(species_name) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(!is.na(species_family), !str_detect(species_species, "spp."), species_kingdom != "Chromista") %>% 
+  dplyr::select("species_kingdom", "species_phylum", "species_class", "species_order", 
+                        "species_family", "species_genus", "species_species") %>% 
+  dplyr::mutate(species_species = paste0(substr(species_genus, 1, 1), ". ", sub("^[^ ]+ ", "", species_species)))
+# The mutate changes the spp name to abbreviate the Genus (e.g. Aeshna cyanea to A. cyanea)
+```
+
+Create a hierarchical structure for the plot
+
+```{r}
+taxonomy <- spp_taxonomy[, c("species_kingdom", "species_phylum", "species_class", "species_order", "species_family", "species_genus", "species_species")]
+
+taxonomy[] <- lapply(taxonomy, factor)
+
+# Create a phylogenetic tree
+phylo_tree <- as.phylo.formula(~species_kingdom/species_phylum/species_class/species_order/species_family/species_genus/species_species, data = taxonomy)
+```
+
+Manual creating a phylo_tree (with equal branches)
+
+```{r}
+ggtree_obj <- ggtree(phylo_tree, branch.length='none', layout='circular')
+
+# Extract the phylum information for coloring
+#taxonomy$label <- paste0(substr(spp_taxonomy$species_genus, 1, 1), ". ", spp_taxonomy$species_species)
+class_info <- taxonomy$species_class[match(phylo_tree$tip.label, taxonomy$species_species)]
+
+# Add the phylum information to the ggtree object
+ggtree_obj <- ggtree_obj %<+% data.frame(label = phylo_tree$tip.label, class = class_info)
+
+# Create a color vector for the phylum levels
+class_colors <- rainbow(length(unique(class_info)))
+names(class_colors) <- unique(class_info)
+
+# Plot the cladogram with colored branches
+spp_cladogram <- ggtree_obj +
+  geom_tiplab(size=3) + #If you want to add species names
+  geom_tree(aes(color=class)) +
+  scale_color_manual(values = class_colors) +
+  theme(legend.position = "right")
+```
+
+
+```{r}
+spp_cladogram
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_cladogram.pdf", plot = spp_cladogram, width = 8, height = 5)
+```
+
+
+### 13.2.2 Class level
+
+Let's group by class to see the major taxonomic Classes used
+
+First removing cases where species_species was "spp." replacing with NA for taxonomic classification
+
+```{r}
+EIPAAB_database <- EIPAAB_database %>% 
+  dplyr::mutate(species_species = if_else(species_species == "spp.", NA, species_species))
+```
+
+Let's look at the major Class
+
+```{r}
+# Total number of spp
+n_spp <- EIPAAB_database %>% 
+  dplyr::distinct(species_name) %>% 
+  nrow() 
+
+# Number of spp per Class and per phylum 
+spp_classes <- EIPAAB_database %>% 
+  dplyr::group_by(species_class, species_phylum) %>% 
+  dplyr::reframe(count_class = length(unique(species_name)),
+                 percent_class = round(count_class/n_spp*100,1)) %>% 
+  dplyr::group_by(species_phylum) %>% 
+  dplyr::mutate(count_phylum = sum(count_class),
+                percent_phylum = round(count_phylum/n_spp*100,1)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(desc(percent_class))
+  
+
+spp_classes %>% 
+  dplyr::slice(1:10)
+```
+Making a figure for the 15 most abundant Class, it terms of species diversity in the EIPAAB database
+
+```{r}
+class_n_spp_fig <- spp_classes %>% 
+  dplyr::arrange(desc(percent_class)) %>% # arrange the dataset
+  dplyr::slice(1:15) %>% # Take only the most diverse 15 Class
+  dplyr::mutate(species_class = fct_reorder(species_class, percent_class), # Order by diversity
+                species_phylum = fct_reorder(species_phylum, desc(percent_phylum))) %>% # Order by diversity
+  ggplot(aes(x=species_class, y=count_class, color = species_phylum)) +
+  geom_segment(aes(x=species_class, xend=species_class, y=0, yend=count_class)) +
+  geom_point(size=4) +
+  geom_text(aes(label = count_class), 
+            hjust=-1.2, 
+            size=3.5, 
+            color="black") +
+  scale_colour_brewer(palette= "Dark2") +
+  coord_flip() +
+  ylim(0, 75) +
+  theme_classic() +
+   labs(
+    x = "",
+    y = "Number of distict species in the database"
+  ) +
+   theme(legend.position = c(0., 0.05),  # Positioning the legend inside the plot
+    legend.justification = c(-3, 0),   # Bottom left inside the plot
+    legend.box.just = "right",
+    legend.background = element_rect(fill=alpha('white', 0.5))
+   )
+
+class_n_spp_fig
+```
+
+Save the figure
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_class_n_spp_fig.pdf", plot = class_n_spp_fig, width = 5, height = 5)
+```
+
+### 13.2.3 Phylum level
+
+Here's a look at the % at the phylum level 
+
+```{r}
+# In the class summary we also included percent_phylum
+spp_classes %>% 
+  dplyr::group_by(species_phylum) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(-species_class, -count_class, -percent_class) %>% 
+  dplyr::arrange(desc(percent_phylum))
+```
+
+A ring chart at the phylum level
+
+```{r}
+ring_plot_df <- spp_classes %>% 
+  dplyr::slice(1:15) %>%
+  dplyr::group_by(species_phylum) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(species_phylum, count_phylum) %>% 
+  dplyr::mutate(percent_phylum = count_phylum/sum(count_phylum)) %>% 
+  dplyr::arrange(desc(percent_phylum))
+
+# Compute the cumulative percentages (top of each rectangle)
+ring_plot_df$ymax = cumsum(ring_plot_df$percent_phylum)
+
+# Compute the bottom of each rectangle
+ring_plot_df$ymin = c(0, head(ring_plot_df$ymax, n=-1))
+
+# Compute label position
+ring_plot_df$labelPosition <- (ring_plot_df$ymax + ring_plot_df$ymin) / 2
+
+# Compute a good label
+ring_plot_df$label <- paste0(ring_plot_df$species_phylum, "\n (n = ", ring_plot_df$count_phylum, ")")
+
+
+phylum_ring_fig <- ring_plot_df %>% 
+  dplyr::mutate(species_phylum = fct_reorder(species_phylum, desc(percent_phylum))) %>% 
+  ggplot(aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=species_phylum)) +
+  geom_rect() +
+  coord_polar(theta="y") + 
+  geom_label(x=5, aes(y=labelPosition, label=label), size=3, alpha = 0.8) +
+  scale_fill_brewer(palette= "Dark2") +
+  xlim(c(2, 5)) +
+  theme_void() +
+  theme(legend.position = "none")
+
+phylum_ring_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_phylum_ring_fig.pdf", plot = phylum_ring_fig, width = 5, height = 5)
+```
+
+
+## 13.3 Taxa representation
+
+Now we will look at how many times each phylum, class, order, family, genus, species appear in the database
+
+First we will make a dataset that counts the number of species within each phylum, class, order, family, and genus.
+
+```{r}
+# Step 1: Separate and pivot the data
+lineage_data <- EIPAAB_database %>%
+  pivot_longer(cols = c("species_phylum", "species_class", "species_order", 
+                        "species_family", "species_genus", "species_species"), 
+               names_to = "lineage_level", values_to = "classification") %>%
+  dplyr::mutate(lineage_level = str_remove(lineage_level, "species_"))
+
+
+# Define the order
+lineage_levels_order <- c("phylum", "class", "order", "family", "genus", "species")
+
+# Step 2: Create parent-child relationships
+lineage_data <- lineage_data %>%
+  group_by(unique_row_id) %>%
+  mutate(parent = case_when(
+    lineage_level == "phylum" ~ "Animalia",
+    lineage_level == "class" ~ lag(classification, 1),
+    lineage_level == "order" ~ lag(classification, 1),
+    lineage_level == "family" ~ lag(classification, 1),
+    lineage_level == "genus" ~ lag(classification, 1),
+    lineage_level == "species" ~ lag(classification, 1),
+  )) %>%
+  ungroup()
+```
+
+Here we sum the total number of species used in the database across each taxonomic classification
+                
+```{r}
+n_rows <- EIPAAB_database %>%
+  nrow()
+
+lineage_count_use <- lineage_data %>%
+  dplyr::group_by(classification, lineage_level, parent) %>%
+  dplyr::reframe(classification_count = length(unique_row_id),
+                classification_percent = round(classification_count/n_rows*100,1))
+```
+
+Making a plot to look at the 15 most commonly used class, but you can do this at any of the taxonomic levels
+
+```{r}
+class_use_fig <- lineage_count_use %>% 
+  dplyr::filter(lineage_level == "class") %>% 
+  dplyr::arrange(desc(classification_percent)) %>% 
+  dplyr::slice(1:15) %>% 
+  dplyr::mutate(classification = fct_reorder(classification, classification_percent),
+                parent = fct_reorder(parent, desc(classification_percent))) %>%
+  ggplot(aes(x=classification, y=classification_percent, color = parent)) +
+  geom_segment(aes(x=classification, xend=classification, y=0, yend=classification_percent)) +
+  geom_point(size=4) +
+  geom_text(aes(label = paste0(round(classification_percent,2), "%")), 
+            hjust=-0.5, 
+            size=3.5, 
+            color="black") +
+  scale_colour_brewer(palette= "Dark2") +
+  coord_flip() +
+  ylim(0, 100) +
+  theme_classic() +
+   labs(
+    x = "",
+    y = "Percentage representation in the database"
+  ) +
+   theme(legend.position = c(0., 0.05),  # Positioning the legend inside the plot
+    legend.justification = c(-3, 0),   # Bottom left inside the plot
+    legend.box.just = "right",
+    legend.background = element_rect(fill=alpha('white', 0.5))
+   )
+
+class_use_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_class_use_fig.pdf", plot = class_use_fig, width = 5, height = 5)
+```
+
+
+```{r}
+lineage_count_use %>% 
+  dplyr::filter(lineage_level == "class") %>% 
+  dplyr::group_by(classification) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(desc(classification_percent))
+```
+
+Here's break down by Phylum
+
+```{r}
+ring_use_plot_df <- lineage_count_use %>% 
+  dplyr::filter(lineage_level == "phylum") %>% 
+  dplyr::arrange(desc(classification_percent)) %>% 
+  dplyr::mutate(classification_percent = round(classification_percent, 2)) %>% 
+  dplyr::slice(1:8)
+
+# Compute the cumulative percentages (top of each rectangle)
+ring_use_plot_df$ymax = cumsum(ring_use_plot_df$classification_percent)
+
+# Compute the bottom of each rectangle
+ring_use_plot_df$ymin = c(0, head(ring_use_plot_df$ymax, n=-1))
+
+# Compute label position
+ring_use_plot_df$labelPosition <- (ring_use_plot_df$ymax + ring_use_plot_df$ymin) / 2
+
+# Compute a good label
+ring_use_plot_df$label <- paste0(ring_use_plot_df$classification, "\n (", ring_use_plot_df$classification_percent, "%)")
+
+
+phylum_use_ring_fig <- ring_use_plot_df %>% 
+  dplyr::mutate(classification = fct_reorder(classification, desc(classification_percent))) %>% 
+  ggplot(aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=classification)) +
+  geom_rect() +
+  coord_polar(theta="y") + 
+  geom_label(x=5, aes(y=labelPosition, label=label), size=3, alpha = 0.8) +
+  scale_fill_brewer(palette= "Dark2") +
+  xlim(c(2, 5)) +
+  theme_void() 
+  #theme(legend.position = "none")
+
+phylum_use_ring_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_phylum_use_ring_fig.pdf", plot = phylum_use_ring_fig, width = 5, height = 5)
+```
+
+### 13.3.2 Taxa representation by study motivation
+
+Making a data set that looks at relative representation by each motivation, and the total
+
+```{r}
+lineage_count_use_motivation <- lineage_data %>%
+  dplyr::group_by(study_motivation, lineage_level, parent, classification) %>%
+  dplyr::reframe(classification_count = length(unique_row_id)) %>%
+  dplyr::group_by(study_motivation, lineage_level) %>%
+  dplyr::mutate(n_motivation = sum(classification_count)) %>%
+  dplyr::ungroup() %>% 
+  dplyr::mutate(classification_percent = (classification_count/n_motivation)*100)
+
+lineage_count_use_all <- lineage_data %>%
+  dplyr::group_by(lineage_level, parent, classification) %>%
+  dplyr::reframe(classification_count = length(unique_row_id)) %>%
+  dplyr::group_by(lineage_level) %>%
+  dplyr::mutate(n_motivation = sum(classification_count)) %>%
+  dplyr::ungroup() %>% 
+  dplyr::mutate(classification_percent = (classification_count/n_motivation)*100) %>% 
+  dplyr::mutate(study_motivation = "All")
+
+lineage_count_use_motivation <- lineage_count_use_motivation %>% 
+  rbind(., lineage_count_use_all) %>% 
+  dplyr::mutate(study_motivation = fct_relevel(study_motivation, "All", "Environmental", "Medical", "Basic research"))
+```
+
+Here's a tile plot to compare the use of different taxa across the study motivations
+
+```{r}
+class_order_df <- lineage_count_use %>% 
+  dplyr::filter(lineage_level == "class") %>% 
+  dplyr::arrange(classification_percent) %>% 
+  dplyr::mutate(class_order = 1:nrow(.)) %>% 
+  dplyr::select(classification, class_order)
+
+
+class_use_motivation_fig <- lineage_count_use_motivation %>% 
+  dplyr::filter(lineage_level == "class") %>% 
+  dplyr::full_join(., class_order_df, by = "classification") %>% 
+  dplyr::mutate(classification = fct_reorder(classification, class_order),
+                parent = fct_reorder(parent, desc(class_order))) %>%
+  ggplot(aes(x = study_motivation, y = classification, fill = classification_percent)) +
+  geom_tile() +
+  geom_text(aes(label = paste0(round(classification_percent, 1),"%"))) +
+  scale_fill_gradient(name = expression("Relative\nabudance (%)"),
+                      low = "#FFFFFF", high = "#231F20") +
+  theme_classic() +
+ # theme(axis.text.x = element_text(angle = 90, hjust = 1.1, vjust = 0.4)) +
+  labs(x = "Study motivation",
+       y = "Taxonomic class")
+class_use_motivation_fig
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_class_use_motivation_fig.pdf", plot = class_use_motivation_fig, width = 5, height = 5)
+```
+
+
+### 13.3.3 Most common species 
+
+Let's see what the most common species were. This is calculated at the population level (i.e. doesn't count each species mutiple times if multiple compounds were used in a single article; unique_population_id)
+
+```{r}
+n_total <- EIPAAB_database %>%
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::reframe(n = length(unique_population_id)) %>% 
+  nrow(.)
+
+n_spp <- EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id, species_ncbi_taxonomy_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(species_name, species_ncbi_taxonomy_id) %>%
+  dplyr::reframe(n = length(species_name),
+                 percent = round(n/n_total*100,1)) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::mutate(spp_number = 1:nrow(.))
+
+n_spp
+```
+
+Making a broad category of abundance (article_n_group) to make the summary and figure more digestible  
+
+```{r}
+n_spp_fig_data <- n_spp %>% 
+  dplyr::mutate(species_ncbi_taxonomy_id = fct_reorder(species_ncbi_taxonomy_id, desc(n))) %>% 
+  dplyr::mutate(
+    article_n_group = case_when(
+      n == 1 ~ "One only",
+      n >= 2 & n <= 5 ~ "Between 2 and 5",
+      n >= 5 & n <= 10 ~ "Between 6 and 10",
+      n >= 10 ~ "Greater than 10",
+      TRUE ~ "Others"
+    )
+  )
+```
+
+
+This is the number of species in each category
+
+```{r}
+article_n_group_summary <- n_spp_fig_data %>% 
+  dplyr::group_by(article_n_group) %>% 
+  dplyr::reframe(n_cat = length(species_name))
+article_n_group_summary
+```
+
+Making a plot to show the distribution of species use in the EIPAAB database
+
+```{r, fig.width=5, fig.height=5}
+n_spp_fig <- n_spp_fig_data %>% 
+  dplyr::mutate(article_n_group = fct_relevel(article_n_group, "Greater than 10", "Between 6 and 10", "Between 2 and 5", "One only")) %>% 
+  ggplot(aes(y = n, x = spp_number, color = article_n_group)) +
+  geom_line(linewidth = 1, alpha = 0.2) +
+  geom_point(stat = "identity", size = 1, alpha = 0.8) +
+  scale_color_manual(
+    values = c(
+    "One only" = "#E94039", 
+    "Between 2 and 5" = "#F18E76", 
+    "Between 6 and 10" = "#877FBC", 
+    "Greater than 10" = "#4D479D"
+    ),
+  labels = c(
+      "One only" = "One only (n = 104)",
+      "Between 2 and 5" = "Between 2 and 5 (n = 53)",
+      "Between 6 and 10" = "Between 6 and 10 (n = 11)",
+      "Greater than 10" = "Greater than 10 (n = 6)"
+      )
+  ) +  # Set colours for each category
+  theme_classic() +
+  theme(
+    legend.position = c(-0.3, 0.4),  # Positioning the legend inside the plot
+    legend.justification = c(-3, 0),   # Bottom left inside the plot
+    legend.box.just = "right"
+    ) +
+  labs(
+    x = paste0("Species (1-174)"),
+    y = "Number of articles",
+    color = "Article number category"
+  )
+
+n_spp_fig
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_n_spp_fig.pdf", plot = n_spp_fig, width = 5, height = 5)
+```
+
+Making a list of the most common 15 species
+
+```{r}
+n_spp_used <- EIPAAB_database %>% 
+  dplyr::distinct(unique_population_id) %>% 
+  nrow(.)
+
+top_15_spp_list <- EIPAAB_database %>% 
+  dplyr::group_by(species_name) %>% 
+  dplyr::summarise(n = length(unique(unique_population_id)), .groups = 'drop') %>% 
+  dplyr::arrange(desc(n)) %>%  
+  dplyr::slice(1:15) %>% 
+  dplyr::pull(species_name) %>% 
+  as.list()
+```
+
+Making a summary dataframe base on study motivation
+
+```{r}
+common_species <- EIPAAB_database %>%
+  dplyr::filter(species_name %in% top_15_spp_list) %>%
+  dplyr::group_by(species_name, study_motivation) %>%
+  dplyr::summarise(n = length(unique(article_id)), .groups = 'drop') %>%
+  tidyr::complete(species_name, study_motivation, fill = list(n = 0))
+
+
+species_order <- common_species %>%
+  group_by(species_name) %>%
+  summarise(total_n = sum(n), .groups = 'drop') %>%
+  arrange(desc(total_n)) %>%
+  ungroup()
+
+
+common_species <- common_species %>%
+  inner_join(species_order, by = "species_name") %>%
+  mutate(species_name = fct_reorder(species_name, total_n),
+         study_motivation = fct_relevel(study_motivation, "Environmental", "Medical", "Basic research")) 
+```
+
+A plot of the number of times each of the 15 overall most common species appeared in articles within the EIPAAB databse by study motivation. It's a little hard to see in the chunk output, try viewing in an external window. 
+
+```{r, fig.height=10, fig.width=5}
+top_15_spp_fig <- common_species %>% 
+  ggplot(aes(x=species_name, y=n, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = n), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  coord_flip() +
+  theme_classic() +
+   labs(
+    x = "",
+    y = "Number of studies"
+  ) +
+   theme()
+
+top_15_spp_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_top_15_spp_fig.pdf", plot = top_15_spp_fig, width = 5, height = 10)
+```
+
+
+Summarising the top 10 in each motivation more specifically
+
+```{r}
+spp_moitivation_summary <- EIPAAB_database %>% 
+  dplyr::group_by(species_name, study_motivation) %>% 
+  dplyr::summarise(n = length(unique(unique_population_id)), .groups = 'drop') %>% 
+  tidyr::complete(species_name, study_motivation, fill = list(n = 0)) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(prop = n/total) %>% 
+  dplyr::select(-total)
+```
+
+This plot shows the top 10 in each motivation
+
+```{r}
+top_10_env_spp <- spp_moitivation_summary %>% 
+  dplyr::filter(study_motivation == "Environmental") %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::mutate(species_name = fct_reorder(species_name, n)) %>% 
+  ggplot(aes(x=species_name, y=n)) +
+  geom_col(width = 0.01, colour = "#60BD6C", fill = "#60BD6C") +
+  geom_point(size = 2, colour = "#60BD6C", fill = "#60BD6C") +
+  geom_text(aes(label = n), hjust=-0.6, size=3.5, color="black") +
+  coord_flip() +
+  theme_classic() +
+   labs(
+    x = "",
+    y = "Number of studies",
+    title = "Environmental"
+  ) +
+   theme(
+     plot.title = element_text(size = 12)
+   )
+
+top_10_med_spp <- spp_moitivation_summary %>% 
+  dplyr::filter(study_motivation == "Medical") %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::mutate(species_name = fct_reorder(species_name, n)) %>% 
+  ggplot(aes(x=species_name, y=n)) +
+  geom_col(width = 0.01, colour = "#D359A1", fill = "#D359A1") +
+  geom_point(size = 2, colour = "#D359A1", fill = "#D359A1") +
+  geom_text(aes(label = n), hjust=-0.6, size=3.5, color="black") +
+  coord_flip() +
+  theme_classic() +
+   labs(
+    x = "",
+    y = "Number of studies",
+    title = "Medical"
+  ) +
+   theme(
+     plot.title = element_text(size = 12)
+   )
+
+top_10_base_spp <- spp_moitivation_summary %>% 
+  dplyr::filter(study_motivation == "Basic research") %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::mutate(species_name = fct_reorder(species_name, n)) %>% 
+  ggplot(aes(x=species_name, y=n)) +
+  geom_col(width = 0.01, colour = "#3C82C4", fill = "#3C82C4") +
+  geom_point(size = 2, colour = "#3C82C4", fill = "#3C82C4") +
+  geom_text(aes(label = n), hjust=-0.6, size=3.5, color="black") +
+  coord_flip() +
+  theme_classic() +
+   labs(
+    x = "",
+    y = "Number of studies",
+    title = "Basic"
+  ) +
+   theme(
+     plot.title = element_text(size = 12)
+   )
+```
+
+Here's a plot to compare the top 10 spp in each study motivation more specifically 
+
+```{r fig.width=8, fig.height=8}
+top_10_combind_plot <- grid.arrange(top_10_env_spp, top_10_med_spp, top_10_base_spp, ncol = 3)
+```
+
+Looking at the number of distinct species used in each motivation group
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::reframe(n_motivation = n_distinct(article_id),
+                 n_distinct_spp = n_distinct(species_name))
+```
+
+
+## 13.4 Species habitat
+
+First checking how many species have IUCN data, which we will use to assess habitat differences
+
+```{r}
+species_iucn_summary <- EIPAAB_database %>% 
+  dplyr::group_by(species_name) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(species_iucn_bin = if_else(is.na(species_iucn_doi), "No", "Yes")) %>% 
+  dplyr::group_by(species_iucn_bin) %>% 
+  dplyr::reframe(n = length(species_iucn_bin))
+
+species_iucn_summary
+```
+
+Summarising the IUNC habitat type, some species will have multiple habitats, so we split the string by the sepreate (;)
+
+```{r}
+habitat_summary <- EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::group_by(species_iucn_habitat) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(species_iucn_habitat = str_trim(species_iucn_habitat)) %>%
+  tidyr::separate_rows(species_iucn_habitat, sep = ";") %>% # each spp has multiple habitats the string needs spliting
+  dplyr::group_by(species_iucn_habitat) %>% 
+  dplyr::reframe(n_articles = sum(n)) %>% # now a sum for each habitat
+  arrange(desc(n_articles))
+habitat_summary
+```
+
+Checking how many freshwater vs marine species there are. Wetlands inland categories are freshwater bodies where as Marine  have multiple categories (Marine Neritic, Marine Coastal or Supratidal, Marine Intertidal, Marine Oceanic). 
+
+```{r}
+habitat_summary %>% 
+  dplyr::filter(str_starts(species_iucn_habitat, "Marine") | species_iucn_habitat == "Wetlands inland") %>% # Only habitats of interest 
+  dplyr::mutate(aquatic_type = if_else(species_iucn_habitat == "Wetlands inland", "Freshwater", "Marine")) %>% # New category
+  dplyr::group_by(aquatic_type) %>% 
+  dplyr::reframe(n_articles = sum(n_articles)) %>% # Final sums
+  dplyr::ungroup() %>% 
+  dplyr::mutate(n_total = sum(n_articles),
+                percent =  round(n_articles/n_total*100,1))
+```
+
+
+Lets break this up by study motivation 
+
+```{r}
+habitat_summary_all <- EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation, species_iucn_habitat) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(species_iucn_habitat = str_trim(species_iucn_habitat)) %>%
+  tidyr::separate_rows(species_iucn_habitat, sep = ";") %>% # each spp has multiple habitats the string needs spliting
+  dplyr::group_by(species_iucn_habitat, study_motivation) %>% 
+  dplyr::reframe(n_articles = sum(n)) %>% # now a sum for each habitat
+  arrange(desc(n_articles))
+habitat_summary_all
+```
+
+Selecting only habitats of interest and allocating to Freshwater or Marine
+
+```{r}
+freshwater_marine <- habitat_summary_all %>% 
+  dplyr::filter(str_starts(species_iucn_habitat, "Marine") | species_iucn_habitat == "Wetlands inland") %>% # Only habitats of interest 
+  dplyr::mutate(aquatic_type = if_else(species_iucn_habitat == "Wetlands inland", "Freshwater", "Marine")) %>% # New category
+  dplyr::group_by(aquatic_type, study_motivation) %>% 
+  dplyr::reframe(n_articles = sum(n_articles)) %>% # Final sums
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(n_cat = sum(n_articles)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(prop =  n_articles/n_cat) # A proportion of those identify as freshwater vs marine
+
+freshwater_marine
+```
+
+
+```{r, fig.width=5, fig.height=2.5}
+aquatic_type_order <- c("Freshwater", "Marine")
+
+# Define the black and grey color theme
+#color_theme <- c("#7FAB91", "#2A4A64")
+
+# Calculate cumulative positions for text labels
+freshwater_marine <- freshwater_marine %>%
+  dplyr::mutate(aquatic_type = factor(aquatic_type, levels = aquatic_type_order)) %>% 
+  dplyr::group_by(study_motivation) %>%
+  dplyr::arrange(desc(aquatic_type)) %>% 
+  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 2)
+
+# Define the black and grey color theme
+color_theme <- c("#7FAB91", "#2A4A64")
+
+# Create the plot
+habitat_fig <- freshwater_marine %>%
+  mutate(study_motivation = fct_relevel(study_motivation, "Basic research", "Medical", "Environmental")) %>% 
+  ggplot(aes(y = prop, x = study_motivation, fill = aquatic_type, group = aquatic_type)) +
+  geom_bar(stat = "identity", width = 0.9) +
+  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white", size = 3) + 
+  scale_fill_manual(values = color_theme, name = "Habitat") + 
+  theme_classic() +
+  theme(legend.position = "right") +
+  labs(
+    x = "Study motivation",
+    y = "Proportion of all species assigned to freshwater or marine habitat"
+  ) +
+  coord_flip()
+
+habitat_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_habitat_fig.pdf", plot = habitat_fig, width = 10, height = 5)
+```
+
+We should also consider how many records did not inculde IUCN reports and thus habitat.
+
+Let's make a plot that shows how many didn't have an assigned IUNC habitat. To add to the above figure.
+
+```{r}
+no_habitat <- EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>%
+  dplyr::mutate(species_iucn_bin = if_else(is.na(species_iucn_doi), "No", "Yes")) %>% 
+  dplyr::group_by(species_iucn_bin) %>% 
+  dplyr::reframe(n = length(species_iucn_bin))
+  
+
+n_total <- EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>%
+  nrow(.)
+
+no_habitat <- no_habitat %>%
+  dplyr::mutate(prop = n/n_total)
+
+no_habitat
+```
+
+Here's the plot 
+
+```{r, fig.width=2.5, fig.height=5}
+# Define the black and grey color theme
+black_and_grey <- c("#BCBEC0", "#414042")
+
+yes_order <- c("Yes", "No")
+
+# Calculate cumulative positions for text labels
+habitat_info_df_fig <- no_habitat %>%
+  dplyr::mutate(species_iucn_bin = factor(species_iucn_bin, levels = yes_order)) %>% 
+  dplyr::arrange(desc(species_iucn_bin)) %>% 
+  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 2)
+
+habitat_info_fig <- habitat_info_df_fig %>%
+  dplyr::mutate(species_iucn_bin = factor(species_iucn_bin, levels = yes_order)) %>% 
+  ggplot(aes(y = prop, x = 1, fill = species_iucn_bin)) +
+  geom_bar(stat = "identity", width = 0.1) +
+  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white") + 
+  scale_fill_manual(values = black_and_grey, name = "Habitat") + 
+  theme_classic() +
+  theme(legend.position = "right",
+        axis.text.x = element_blank(),  # Remove x-axis text
+        axis.ticks.x = element_blank()  # Remove x-axis ticks 
+        ) +
+  labs(
+    x = "",
+    y = "Proportion of species tested in the database"
+  )
+habitat_info_fig
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_habitat_info_fig.pdf", plot = habitat_info_fig, width = 5, height = 10)
+```
+
+
+## 13.5 Species life satge 
+
+Let's get an overall summary first, without Unknown or not specified life stages
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::group_by(species_stage) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(species_stage = str_trim(species_stage)) %>%
+  tidyr::separate_rows(species_stage, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::filter(species_stage != "Unknown or not specified") %>% 
+  dplyr::group_by(species_stage) %>% 
+  dplyr::reframe(n_articles = sum(n)) %>%  # now a sum for each habitat
+  dplyr::mutate(total_stages = sum(n_articles)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(overall_percent = round(n_articles/total_stages*100,1))
+```
+
+
+Let's take a look at spp life stages used in the EIPAAB databasebased on study motivation
+
+```{r}
+stage_summary_all <- EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation, species_stage) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(species_stage = str_trim(species_stage)) %>%
+  tidyr::separate_rows(species_stage, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::group_by(species_stage, study_motivation) %>% 
+  dplyr::reframe(n_total = sum(n)) %>%  # now a sum for each habitat
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(n_motivation = sum(n_total)) %>% 
+  dplyr::ungroup()
+
+stage_summary_all
+```
+
+For life stages that are described, what is the breakdown 
+
+```{r, fig.width=5, fig.height=2.5}
+stage_order <- c("Adult", "Juvenile", "Larvae", "Egg or embryo")
+
+# Define the black and grey color theme
+color_theme <- c("#A14323", "#D86C2F", "#EE9E5A", "#F3E9A5")
+
+# Making proportion for those that did report 
+stage_summary_described <- stage_summary_all %>%
+  dplyr::filter(species_stage %in% stage_order) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(n_motivation = sum(n_total)) %>%
+  dplyr::ungroup() %>% 
+  dplyr::mutate(prop = n_total/n_motivation)
+    
+
+
+# Calculate cumulative positions for text labels
+stage_summary_described <- stage_summary_described %>%
+  dplyr::mutate(species_stage = factor(species_stage, levels = stage_order)) %>% 
+  dplyr::group_by(study_motivation) %>%
+  dplyr::arrange(desc(species_stage)) %>% 
+  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 4)
+
+# Create the plot
+life_stage_fig <- stage_summary_described %>%
+  mutate(study_motivation = fct_relevel(study_motivation, "Basic research", "Medical", "Environmental")) %>%
+  ggplot(aes(y = prop, x = study_motivation, fill = species_stage, group = species_stage)) +
+  geom_bar(stat = "identity", width = 0.9) +
+  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white", size = 3) + 
+ scale_fill_manual(values = color_theme, name = "Life stage") + 
+  theme_classic() +
+  theme(legend.position = "right") +
+  labs(
+    x = "Study motivation",
+    y = "Proportion of all species assigned to a life stage"
+  ) +
+  coord_flip()
+
+life_stage_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_life_stage_fig.pdf", plot = life_stage_fig, width = 10, height = 5)
+```
+
+Let's also look at how many where unknown or not described
+
+```{r}
+stage_summary_info  <- stage_summary_all %>% 
+  dplyr::mutate(stage_reported = if_else(species_stage == "Unknown or not specified", "No", "Yes")) %>% 
+  dplyr::group_by(stage_reported) %>% 
+  dplyr::reframe(n = sum(n_total))
+
+n_total <- stage_summary_info %>% 
+  dplyr::reframe(n_total = sum(n)) %>% 
+  pull(n_total)
+
+stage_summary_info <- stage_summary_info %>% 
+  dplyr::mutate(prop = n/n_total)
+```
+
+Here's the plot 
+
+```{r, fig.width=2.5, fig.height=5}
+# Define the black and grey color theme
+black_and_grey <- c("#BCBEC0", "#414042")
+
+yes_order <- c("Yes", "No")
+
+# Calculate cumulative positions for text labels
+stage_summary_info <- stage_summary_info %>%
+  dplyr::mutate(stage_reported = factor(stage_reported, levels = yes_order)) %>% 
+  dplyr::arrange(desc(stage_reported)) %>% 
+  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 2)
+
+stage_info_fig <- stage_summary_info %>%
+  dplyr::mutate(stage_reported = factor(stage_reported, levels = yes_order)) %>% 
+  ggplot(aes(y = prop, x = 1, fill = stage_reported)) +
+  geom_bar(stat = "identity", width = 0.9) +
+  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white") + 
+  scale_fill_manual(values = black_and_grey, name = "Stage reported") + 
+  theme_classic() +
+  theme(legend.position = "right",
+        axis.text.x = element_blank(),  # Remove x-axis text
+        axis.ticks.x = element_blank()  # Remove x-axis ticks 
+  ) +
+  labs(
+    x = "",
+    y = "Proportion of species tested in the database"
+  )
+stage_info_fig
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_stage_info_fig.pdf", plot = stage_info_fig, width = 2.5, height = 5)
+```
+
+## 13.6 Species sex 
+
+First overall breakdown by female and male without including unreported or hermaphroditic animals
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::group_by(species_sex) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(species_sex = str_trim(species_sex)) %>%
+  tidyr::separate_rows(species_sex, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::group_by(species_sex) %>% 
+  dplyr::summarise(n_articles = sum(n), .groups = 'drop') %>%  # now a sum for each habitat
+  tidyr::complete(species_sex, 
+                  fill = list(n_articles = 0)) %>%  # make a full df with empty categories = 0
+  dplyr::ungroup() %>%
+  dplyr::filter(species_sex == "Female" | species_sex == "Male") %>% 
+  dplyr::mutate(total_sex = sum(n_articles)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(overall_percent = round(n_articles/total_sex*100,1))
+```
+
+
+Let's take a look at the sex of spp used in the EIPAAB database
+
+```{r}
+sex_summary_all <- EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation, species_sex) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(species_sex = str_trim(species_sex)) %>%
+  tidyr::separate_rows(species_sex, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::group_by(species_sex, study_motivation) %>% 
+  dplyr::summarise(n_articles = sum(n), .groups = 'drop') %>%  # now a sum for each habitat
+  tidyr::complete(species_sex, study_motivation, 
+                  fill = list(n_articles = 0)) %>%  # make a full df with empty categories = 0
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_sex = sum(n_articles)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(overall_prop = n_articles/total_sex)
+sex_summary_all
+```
+Let's look at just the proportion of those defined as male and female
+
+```{r}
+sex_male_female <-  sex_summary_all %>% 
+  dplyr::filter(species_sex == "Female" | species_sex == "Male") %>% 
+  dplyr::select(-total_sex, -overall_prop) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_male_female = sum(n_articles)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(prop = n_articles/total_male_female)
+```
+
+Making the plot
+
+```{r, fig.width=5, fig.height=2.5}
+sex_order <- c("Female", "Male")
+
+color_theme <- c("#eb4729", "#1b909a")
+
+# Calculate cumulative positions for text labels
+sex_male_female <- sex_male_female %>%
+  dplyr::mutate(species_sex = factor(species_sex, levels = sex_order)) %>% 
+  dplyr::group_by(study_motivation) %>%
+  dplyr::arrange(desc(species_sex)) %>% 
+  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 2)
+
+# Create the plot
+sex_fig <- sex_male_female %>%
+  mutate(study_motivation = fct_relevel(study_motivation, "Basic research", "Medical", "Environmental")) %>% 
+  ggplot(aes(y = prop, x = study_motivation, fill = species_sex, group = species_sex)) +
+  geom_bar(stat = "identity", width = 0.9) +
+  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white", size = 3) + 
+  scale_fill_manual(values = color_theme, name = "Sex") + 
+  theme_classic() +
+  theme(legend.position = "right") +
+  labs(
+    x = "Study motivation",
+    y = "Proportion of all species assigned to female or male"
+  ) +
+  coord_flip()
+
+sex_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_sex_fig.pdf", plot = sex_fig, width = 10, height = 5)
+```
+
+Now let's look at those not assgined to a sex
+
+```{r}
+sex_summary_info <- sex_summary_all %>% 
+  dplyr::mutate(sex_reported = if_else(species_sex == "Unknown or not specified", "No", "Yes")) %>% 
+  dplyr::group_by(sex_reported) %>%
+  dplyr::reframe(n = sum(n_articles))
+
+n_total <- sex_summary_info %>% 
+  dplyr::reframe(n_total = sum(n)) %>% 
+  dplyr::pull(n_total)
+
+sex_summary_info <- sex_summary_info %>%
+  dplyr::mutate(prop = n/n_total)
+```
+
+
+Here's the plot 
+
+```{r, fig.width=2.5, fig.height=5}
+# Define the black and grey color theme
+black_and_grey <- c("#BCBEC0", "#414042")
+
+yes_order <- c("Yes", "No")
+
+# Calculate cumulative positions for text labels
+sex_summary_info <- sex_summary_info %>%
+  dplyr::mutate(sex_reported = factor(sex_reported, levels = yes_order)) %>% 
+  dplyr::arrange(desc(sex_reported)) %>% 
+  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 2)
+
+sex_info_fig <- sex_summary_info %>%
+  dplyr::mutate(sex_reported = factor(sex_reported, levels = yes_order)) %>% 
+  ggplot(aes(y = prop, x = 1, fill = sex_reported)) +
+  geom_bar(stat = "identity", width = 0.9) +
+  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white") + 
+  scale_fill_manual(values = black_and_grey, name = "Sex reported") + 
+  theme_classic() +
+  theme(legend.position = "right",
+        axis.text.x = element_blank(),  # Remove x-axis text
+        axis.ticks.x = element_blank()  # Remove x-axis ticks 
+        ) +
+  labs(
+    x = "",
+    y = "Proportion of all species"
+  )
+sex_info_fig
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_sex_info_fig.pdf", plot = sex_info_fig, width = 2.5, height = 5)
+```
+
+## 13.7 Species source
+
+Breakdown without unreported 
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::group_by(species_source) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(species_source = str_trim(species_source)) %>%
+  tidyr::separate_rows(species_source, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::group_by(species_source) %>% 
+  dplyr::summarise(n_articles = sum(n), .groups = 'drop') %>%  # now a sum for each habitat
+  tidyr::complete(species_source, 
+                  fill = list(n_articles = 0)) %>%  # make a full df with empty categories = 0
+  dplyr::filter(species_source != "Not reported") %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(total_source = sum(n_articles)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(overall_percent = round(n_articles/total_source*100, 1)) %>% 
+  dplyr::arrange(desc(overall_percent))
+```
+
+Let's look at where the animals were sourced for articles in the EIPAAB database
+
+```{r}
+source_summary_all <- EIPAAB_database %>% 
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation, species_source) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(species_source = str_trim(species_source)) %>%
+  tidyr::separate_rows(species_source, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::group_by(species_source, study_motivation) %>% 
+  dplyr::summarise(n_articles = sum(n), .groups = 'drop') %>%  # now a sum for each habitat
+  tidyr::complete(species_source, study_motivation, 
+                  fill = list(n_articles = 0)) %>%  # make a full df with empty categories = 0
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_source = sum(n_articles)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(overall_prop = n_articles/total_source)
+source_summary_all
+```
+
+```{r}
+source_summary <- source_summary_all %>% 
+  dplyr::filter(species_source != "Not reported") %>% 
+  dplyr::select(species_source, study_motivation, n_articles) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_reported = sum(n_articles)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(prop = n_articles/total_reported)
+source_summary
+```
+
+```{r, fig.width=7, fig.height=2.5}
+source_order <- c("Wild collected", "Lab stock from wild population", "Lab stock of undisclosed origin", 
+                  "Lab stock from commercial supplier", "Commercial supplier or fish farm")
+
+# Define the black and grey color theme
+color_theme <- c("#607C3B", "#A7D271", "#6B6E70", "#A66EAF", "#61346B")
+
+# Calculate cumulative positions for text labels
+source_summary <- source_summary %>%
+  dplyr::mutate(species_source = factor(species_source, levels = source_order)) %>% 
+  dplyr::group_by(study_motivation) %>%
+  dplyr::arrange(desc(species_source)) %>% 
+  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 5)
+
+# Create the plot
+source_fig <- source_summary %>%
+  mutate(study_motivation = fct_relevel(study_motivation, "Basic research", "Medical", "Environmental")) %>% 
+  ggplot(aes(y = prop, x = study_motivation, fill = species_source, group = species_source)) +
+  geom_bar(stat = "identity", width = 0.9) +
+  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white", size = 3) + 
+ scale_fill_manual(values = color_theme, name = "Life stage") + 
+  theme_classic() +
+  theme(legend.position = "right") +
+  labs(
+    x = "Study motivation",
+    y = "Proportion of all species with a described source"
+  ) +
+  coord_flip()
+
+source_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_source_fig.pdf", plot = source_fig, width = 10, height = 5)
+```
+
+Now let's look at those not assigned a source
+
+```{r}
+source_summary_info <- source_summary_all %>% 
+  dplyr::mutate(source_reported = if_else(species_source == "Not reported", "No", "Yes")) %>% 
+  dplyr::group_by(source_reported) %>% 
+  dplyr::reframe(n = sum(n_articles))
+
+n_total <- source_summary_info %>% 
+  dplyr::reframe(n_total = sum(n)) %>% 
+  dplyr::pull(n_total)
+  
+source_summary_info <- source_summary_info %>% 
+  dplyr::mutate(prop = n/n_total)
+```
+
+Here's the plot 
+
+```{r, fig.width=2.5, fig.height=5}
+# Define the black and grey color theme
+black_and_grey <- c("#BCBEC0", "#414042")
+
+yes_order <- c("Yes", "No")
+
+# Calculate cumulative positions for text labels
+source_summary_info <- source_summary_info %>%
+  dplyr::mutate(source_reported = factor(source_reported, levels = yes_order)) %>% 
+  dplyr::arrange(desc(source_reported)) %>% 
+  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 2)
+
+source_info_fig <- source_summary_info %>%
+  dplyr::mutate(source_reported = factor(source_reported, levels = yes_order)) %>% 
+  ggplot(aes(y = prop, x = 1, fill = source_reported)) +
+  geom_bar(stat = "identity", width = 0.9) +
+  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white") + 
+  scale_fill_manual(values = black_and_grey, name = "Source reported") + 
+  theme_classic() +
+  theme(legend.position = "right",
+        axis.text.x = element_blank(),  # Remove x-axis text
+        axis.ticks.x = element_blank()  # Remove x-axis ticks 
+        ) +
+  labs(
+    x = "",
+    y = "Proportion of all species"
+  )
+source_info_fig
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("spp_source_info_fig.pdf", plot = source_info_fig, width = 5, height = 10)
+```
+
+
+# 14 Compounds 
+
+## 14.1 Number of compounds in database
+
+There are 426 distinct compounds in the database
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::distinct(compound_name) %>% 
+  nrow()
+```
+
+
+### 14.1.1 Number of compounds per study
+
+```{r}
+article_n <- EIPAAB_database %>% 
+  dplyr::distinct(article_id) %>% 
+  nrow(.)
+
+compound_n_summary <- EIPAAB_database %>% 
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(compound_n) %>%
+  dplyr::reframe(n = n(),
+                   percent = round((n/article_n)*100,1))
+
+compound_n_summary
+```
+
+How mnay used more then 5
+
+```{r}
+compound_n_summary %>% 
+  dplyr::filter(compound_n > 5) %>% 
+  reframe(n = sum(n),
+          percent = round((n/article_n)*100,1))
+```
+
+
+```{r}
+compound_n_summary <- EIPAAB_database %>% 
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(compound_n, study_motivation) %>%
+  dplyr::summarise(n = n(), .groups = 'drop') %>% 
+  tidyr::complete(compound_n, study_motivation, fill = list(n = 0)) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(prop_motivation = n/total_motivation)
+
+compound_n_summary
+```
+
+
+```{r}
+# Define the colour palette
+motivation_colour_theme <- c("#60BD6C", "#D359A1", "#3C82C4") # Making colour theme to apply to plot
+
+compound_n_oder <- c(1:9, ">10")
+
+compound_n_fig <- compound_n_summary %>% 
+  dplyr::mutate(
+    compound_n = as.character(if_else(compound_n > 10, 10, compound_n)), # Grouping cases above 10
+    compound_n = if_else(compound_n == "10", ">10", compound_n)
+    ) %>% 
+  dplyr::group_by(compound_n, study_motivation) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(compound_n = factor(compound_n, levels = compound_n_oder)) %>%
+  ggplot(aes(x=compound_n, y=n, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = n), vjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+   labs(
+    x = "",
+    y = "Number of studies"
+  ) +
+   theme()
+
+compound_n_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("comp_compound_n_fig.pdf", plot = compound_n_fig, width = 10, height = 5)
+```
+
+## 14.2 Therputic diversity in the database
+
+First lets see how many compounds have an ATC classification. 
+
+305 out of 426 (71.6%)
+
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(compound_name) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::group_by(compound_atc_boolean) %>% 
+  dplyr::reframe(n = length(compound_atc_boolean))
+```
+
+
+### 14.2.1 ATC level 1
+
+Let's seem how many classes there are at the Anatomical Therapeutic Chemical (ATC) level 1 
+
+There are 14 classes at the 1st ATC level (the highest class of the ATC). This is ever class at the first level
+
+```{r}
+n_compound_atc <- EIPAAB_database %>% 
+  dplyr::filter(compound_atc_boolean == "Yes") %>% 
+  dplyr::distinct(compound_name) %>% 
+  nrow(.)
+
+compound_ATC_L1_summary <- EIPAAB_database %>% 
+  dplyr::group_by(compound_name) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::filter(compound_atc_boolean == "Yes") %>% 
+  dplyr::group_by(compound_atc_level_1) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(compound_atc_level_1 = str_trim(compound_atc_level_1)) %>%
+  tidyr::separate_rows(compound_atc_level_1, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::group_by(compound_atc_level_1) %>% 
+  dplyr::reframe(n = sum(n),
+                 percent = round(n/n_compound_atc*100,1),
+                 measure = "compounds") %>% # now a sum for each habitat
+  arrange(desc(n))
+
+compound_ATC_L1_summary
+```
+Now we will make a similar data file to look at the overall use in the database at each ATC level 1
+
+```{r}
+n_data_atc <- EIPAAB_database %>% 
+  dplyr::filter(compound_atc_boolean == "Yes") %>% 
+  nrow(.)
+
+compound_ATC_L1_data_summary <- EIPAAB_database %>% 
+  dplyr::filter(compound_atc_boolean == "Yes") %>% 
+  dplyr::group_by(compound_atc_level_1) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(compound_atc_level_1 = str_trim(compound_atc_level_1)) %>%
+  tidyr::separate_rows(compound_atc_level_1, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::group_by(compound_atc_level_1) %>% 
+  dplyr::reframe(n = sum(n),
+                 percent =round(n/n_data_atc*100,1),
+                 measure = "data") %>% # now a sum for each habitat
+  arrange(desc(percent))
+compound_ATC_L1_data_summary
+```
+
+
+```{r}
+ATC_L1_summary <- compound_ATC_L1_summary %>% 
+  rbind(., compound_ATC_L1_data_summary) %>% 
+  dplyr::mutate(value = if_else(measure == "compounds", n, percent))
+```
+
+
+This plot shows the number of different compounds in each ATC classification as well as the total proportion of data it makes up 
+
+```{r}
+measure_colour_theme <- c("black", "grey") # Making colour theme to apply to plot
+
+# Making a list of act names in the order that we want them in the plot 
+level_1_order <- ATC_L1_summary %>% 
+  dplyr::filter(measure == "data") %>% 
+  dplyr::arrange(value) %>% 
+  dplyr::pull(compound_atc_level_1)
+
+# Making the plot
+atc_level_1_fig <- ATC_L1_summary %>% 
+  dplyr::mutate(compound_atc_level_1 = factor(compound_atc_level_1, levels = level_1_order)) %>% 
+  ggplot(aes(x=compound_atc_level_1, y=value, colour = measure, fill = measure, group = measure)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.2, colour = NA) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = value), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = measure_colour_theme, name = "Value type") +
+   scale_fill_manual(values = measure_colour_theme, name = "Value type") +
+  coord_flip() +
+  scale_y_continuous(
+    name = "Number of distinct compounds",
+    sec.axis = sec_axis(~ . , name = "Total proportion of the database") # Adjust scaling if needed
+  ) +
+  theme_classic() +
+   labs(
+    x = "",
+    y = "Number of distict species in the database"
+  ) +
+   theme()
+
+atc_level_1_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("comp_atc_level_1_fig.pdf", plot = atc_level_1_fig, width = 10, height = 10)
+```
+
+### 14.2.2 ATC level 3
+
+
+Let's seem how many classes there are at the Anatomical Therapeutic Chemical (ATC) level 3
+
+There are 131 distinct classes
+
+
+```{r}
+n_compound_atc <- EIPAAB_database %>% 
+  dplyr::filter(compound_atc_boolean == "Yes") %>% 
+  dplyr::distinct(compound_name) %>% 
+  nrow(.)
+
+compound_ATC_L3_summary <- EIPAAB_database %>% 
+  dplyr::group_by(compound_name) %>% 
+  dplyr::sample_n(1) %>% # sampling one row per article per species (i.e. ignoring multiple rows per article for compounds)
+  dplyr::ungroup() %>% 
+  dplyr::filter(compound_atc_boolean == "Yes") %>% 
+  dplyr::group_by(compound_atc_level_3) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(compound_atc_level_3 = str_trim(compound_atc_level_3)) %>%
+  tidyr::separate_rows(compound_atc_level_3, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::group_by(compound_atc_level_3) %>% 
+  dplyr::reframe(n = sum(n),
+                 percent = round(n/n_compound_atc*100,1),
+                 measure = "compounds") %>% # now a sum for each habitat
+  arrange(desc(n))
+
+compound_ATC_L3_summary
+```
+
+Now we will make a similar data file to look at the overall use in the database at each ATC level 3
+
+```{r}
+n_data_atc <- EIPAAB_database %>% 
+  dplyr::filter(compound_atc_boolean == "Yes") %>% 
+  nrow(.)
+
+compound_ATC_L3_data_summary <- EIPAAB_database %>% 
+  dplyr::filter(compound_atc_boolean == "Yes") %>% 
+  dplyr::group_by(compound_atc_level_3) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(compound_atc_level_3 = str_trim(compound_atc_level_3)) %>%
+  tidyr::separate_rows(compound_atc_level_3, sep = ";") %>% # each spp has multiple habitats the string needs splitting
+  dplyr::group_by(compound_atc_level_3) %>% 
+  dplyr::reframe(n = sum(n),
+                 percent = round(n/n_data_atc*100,1),
+                 measure = "data") %>% # now a sum for each habitat
+  arrange(desc(percent))
+compound_ATC_L3_data_summary
+```
+Here we make a new column called value where we combined the count of distinct compounds and proportion of data
+
+```{r}
+ATC_L3_summary <- compound_ATC_L3_summary %>% 
+  rbind(., compound_ATC_L3_data_summary) %>% 
+  dplyr::mutate(value = if_else(measure == "compounds", n, percent))
+```
+
+
+This plot shows the number of different compounds in each ATC classification as well as the total proportion of data it makes up. This is done for only the 15 most commonly used groups. 
+
+```{r}
+measure_colour_theme <- c("black", "grey") # Making colour theme to apply to plot
+
+# Making a list of act names in the order that we want them in the plot 
+level_3_order_top_15 <- ATC_L3_summary %>% 
+  dplyr::filter(measure == "data") %>% 
+  dplyr::arrange(desc(value)) %>% 
+  dplyr::slice(1:15) %>% 
+  dplyr::arrange(desc(value)) %>%
+  dplyr::pull(compound_atc_level_3)
+
+# Making the plot
+atc_level_3_fig <- ATC_L3_summary %>% 
+  dplyr::filter(compound_atc_level_3 %in% level_3_order_top_15) %>% 
+  dplyr::mutate(compound_atc_level_3 = factor(compound_atc_level_3, levels = level_3_order_top_15)) %>% 
+  ggplot(aes(x=compound_atc_level_3, y=value, fill = measure, colour = measure, 
+             group = measure)) +
+  geom_col(position = position_dodge(width = 1), width = 0.2, colour = NA,) +
+  geom_point(position = position_dodge(width = 1), size = 3) +
+  geom_text(aes(label = value), vjust=-0.6, size=3.5, position =  position_dodge(width = 1)) +
+  scale_colour_manual(values = measure_colour_theme, name = "Value type",
+                      labels = c("Compounds (n)", "Percentage of data")) +
+  scale_fill_manual(values = measure_colour_theme, name = "Value type",
+                      labels = c("Compounds (n)", "Percentage of data")) +
+  scale_y_continuous(
+    name = "Distinct compounds",
+    limits = c(0, 30),                   # Set the range of y-axis
+    breaks = c(0, 10, 20, 30),           # Set the labels at 0, 10, 20, 30
+    sec.axis = sec_axis(~ . , name = "Percentage of database") # Adjust scaling if needed
+  ) +
+  theme_classic() +
+   labs(
+    x = "",
+    y = ""
+  ) +
+   theme(
+    axis.text.y = element_text(size = 8),          # Change y-axis labels size
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 8), # Change x-axis labels orientation
+    legend.title = element_text(size = 12),         # Change legend title size if needed
+    legend.text = element_text(size = 10)  
+   )
+
+atc_level_3_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("atc_level_3_fig.pdf", plot = atc_level_3_fig, width = 10, height = 5)
+```
+
+
+## 14.3 Most common compounds 
+
+Overall the most common compounds are Fluoxetine, Diazepam and 17-alpha-ethinylestradiol
+
+```{r}
+n_row <- EIPAAB_database %>% 
+  nrow(.)
+
+compound_use <- EIPAAB_database %>% 
+  dplyr::group_by(compound_name) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::mutate(prop = n/n_row) %>%
+  arrange(desc(prop))
+
+compound_use
+```
+Let's see what the numbers are for each motivation, but let's also maintain the overall numbers so we can add it to the figure
+
+```{r}
+n_row <- EIPAAB_database %>% 
+  nrow(.)
+
+compound_use_motivation <- EIPAAB_database %>% 
+  dplyr::group_by(study_motivation, compound_name) %>% 
+  dplyr::summarise(n = n(), .groups = 'drop') %>%
+  tidyr::complete(compound_name, study_motivation, fill = list(n = 0)) # Making sure we have a complete dataframe
+
+compound_use_motivation <- compound_use %>% 
+  dplyr::select(-prop) %>% 
+  dplyr::mutate(study_motivation = "All") %>% 
+  rbind(., compound_use_motivation)
+
+compound_use_motivation
+```
+
+The top 10 based on each study motivation as well as the overall total
+
+```{r}
+top_10_comp_all_fig <- compound_use_motivation %>% 
+  dplyr::filter(study_motivation == "All") %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::mutate(compound_name = fct_reorder(compound_name, n)) %>% 
+  ggplot(aes(x=compound_name, y=n)) +
+  geom_col(width = 0.1, colour = NA, fill = "grey") +
+  geom_point(size = 3, colour = "grey", fill = "grey") +
+  geom_text(aes(label = n), hjust=-0.6, size=3.5, color="black") +
+  coord_flip() +
+  theme_classic() +
+   labs(
+     title = "All",
+    x = "",
+    y = "Total use in the database"
+  ) +
+   theme(
+     plot.title = element_text(size = 11)
+   )
+
+
+top_10_comp_env_fig <- compound_use_motivation %>% 
+  dplyr::filter(study_motivation == "Environmental") %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::mutate(compound_name = fct_reorder(compound_name, n)) %>% 
+  ggplot(aes(x=compound_name, y=n)) +
+  geom_col(width = 0.1, colour = NA, fill = "#60BD6C") +
+  geom_point(size = 3, colour = "#60BD6C", fill = "#60BD6C") +
+  geom_text(aes(label = n), hjust=-0.6, size=3.5, color="black") +
+  coord_flip() +
+  theme_classic() +
+   labs(
+     title = "Environmental",
+    x = "",
+    y = "Total use in the database"
+  ) +
+   theme(
+     plot.title = element_text(size = 11)
+   )
+
+
+top_10_comp_med_fig <- compound_use_motivation %>% 
+  dplyr::filter(study_motivation == "Medical") %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::mutate(compound_name = fct_reorder(compound_name, n)) %>% 
+  ggplot(aes(x=compound_name, y=n)) +
+  geom_col(width = 0.1, colour = NA, fill = "#D359A1") +
+  geom_point(size = 3, colour = "#D359A1", fill = "#D359A1") +
+  geom_text(aes(label = n), hjust=-0.6, size=3.5, color="black") +
+  coord_flip() +
+  theme_classic() +
+   labs(
+     title = "Medical",
+    x = "",
+    y = "Total use in the database"
+  ) +
+   theme(
+     plot.title = element_text(size = 11)
+   )
+
+top_10_comp_base_fig <- compound_use_motivation %>% 
+  dplyr::filter(study_motivation == "Basic research") %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::mutate(compound_name = fct_reorder(compound_name, n)) %>% 
+  ggplot(aes(x=compound_name, y=n)) +
+  geom_col(width = 0.1, colour = NA, fill = "#3C82C4") +
+  geom_point(size = 3, colour = "#3C82C4", fill = "#3C82C4") +
+  geom_text(aes(label = n), hjust=-0.6, size=3.5, color="black") +
+  coord_flip() +
+  theme_classic() +
+   labs(
+     title = "Basic Research",
+    x = "",
+    y = "Total use in the database"
+  ) +
+   theme(
+     plot.title = element_text(size = 11)
+     )
+```
+
+Here are the resulting figures 
+
+```{r, fig.width=2.5, fig.height=5}
+top_10_comp_all_fig
+top_10_comp_env_fig
+top_10_comp_med_fig
+top_10_comp_base_fig
+```
+
+Saving as PDFs
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("comp_top_10_comp_all_fig.pdf", plot = top_10_comp_all_fig, width = 5, height = 10)
+ggsave("comp_top_10_comp_env_fig.pdf", plot = top_10_comp_env_fig, width = 5, height = 10)
+ggsave("comp_top_10_comp_med_fig.pdf", plot = top_10_comp_med_fig, width = 5, height = 10)
+ggsave("comp_top_10_comp_base_fig.pdf", plot = top_10_comp_base_fig, width = 5, height = 10)
+```
+
+```{r}
+compound_use_motivation %>% 
+  dplyr::filter(compound_name == "17-alpha-ethinylestradiol")
+```
+
+## 14.4 Mixtures
+
+It was recorded whether the animals were also exposed to compound mixtures
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::reframe(mixture_yes = sum(compond_mixture == "Yes", na.rm = TRUE),
+                 mixture_no = sum(compond_mixture == "No", na.rm = TRUE),
+                 mixture_percent = (mixture_yes/mixture_no)*100
+                 )
+```
+
+Medical articles have a much higher use of mixtures
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::reframe(mixture_yes = sum(compond_mixture == "Yes", na.rm = TRUE),
+                 mixture_no = sum(compond_mixture == "No", na.rm = TRUE),
+                 mixture_percent = round((mixture_yes/mixture_no)*100,1)
+                 )
+```
+
+## 14.6 Exposure route
+
+Data on the method of exposure was also extracted
+
+```{r}
+nrow <- EIPAAB_database %>% 
+  nrow(.)
+
+EIPAAB_database %>% 
+  dplyr::group_by(compound_expose_route) %>% 
+  dplyr::reframe(n = n(),
+                 percent = round((n/nrow)*100,1)
+)
+```
+
+## 14.7 Exposure length
+
+The database has both the minimum and maximum duration of exposure prior to behavioural measure
+(compound_min_duration_exposure and compound_max_duration_exposure). Here we will focus on the maximum duration
+
+These are the different categories of exposure length
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::distinct(compound_max_duration_exposure)
+```
+Some articles did not report the exposure duration at all, or in sufficient detail to extract. 
+
+In total this occurred in 108 cases
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::filter(compound_min_duration_exposure == "Not stated" | compound_max_duration_exposure == "Not stated") %>% 
+  nrow(.)
+```
+
+
+```{r}
+exposure_duration_order <- c("Less than 6 hours", "6 to 24 hours", "1 to 3 days", "3 to 8 days", "8 to 15 days", "15 to 22 days", "22 to 29 days", "1 to 3 months", "3 to 6 months", "Lifetime", "Transgenerational", "Multigenerational")
+
+nrow <- EIPAAB_database %>% 
+  dplyr::filter(compound_max_duration_exposure != "Not stated") %>% 
+  nrow(.)
+
+exposure_duration_summary <- EIPAAB_database %>% 
+  dplyr::filter(compound_max_duration_exposure != "Not stated") %>% 
+  dplyr::group_by(compound_max_duration_exposure) %>% 
+  dplyr::reframe(n = n(),
+                 percent = round((n/nrow)*100,1)
+                 ) %>% 
+  dplyr::mutate(compound_max_duration_exposure =  factor(compound_max_duration_exposure, 
+                                                         levels = exposure_duration_order)) %>% 
+  dplyr::arrange(compound_max_duration_exposure) %>% 
+  dplyr::mutate(study_motivation = "All")
+
+exposure_duration_summary
+```
+
+```{r}
+exposure_duration_order <- c("Less than 6 hours", "6 to 24 hours", "1 to 3 days", "3 to 8 days", "8 to 15 days", "15 to 22 days", "22 to 29 days", "1 to 3 months", "3 to 6 months", "Lifetime", "Transgenerational", "Multigenerational")
+
+
+exposure_duration_motivation_summary <- EIPAAB_database %>% 
+  dplyr::filter(compound_max_duration_exposure != "Not stated") %>% 
+  dplyr::group_by(compound_max_duration_exposure, study_motivation) %>% 
+  dplyr::summarise(n = n(), .groups = 'drop') %>% 
+  tidyr::complete(compound_max_duration_exposure, study_motivation, fill = list(n = 0)) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round((n/total_motivation)*100,1)) %>%
+  dplyr::select(-total_motivation)
+
+exp_duration_motivation_summary <- exposure_duration_motivation_summary %>% 
+  rbind(exposure_duration_summary) %>% 
+  dplyr::mutate(compound_max_duration_exposure =  factor(compound_max_duration_exposure, 
+                                                         levels = rev(exposure_duration_order))
+                ) %>% 
+  dplyr::arrange(desc(compound_max_duration_exposure))
+
+exp_duration_motivation_summary
+```
+
+```{r}
+exp_duration_all_fig <- exp_duration_motivation_summary %>% 
+  dplyr::filter(study_motivation == "All") %>%
+  ggplot(aes(x=compound_max_duration_exposure, y=percent)) +
+  geom_col(width = 0.1, colour = NA, fill = "grey") +
+  geom_point(size = 3, colour = "grey", fill = "grey") +
+  geom_text(aes(label = percent), vjust=-0.6, size=3.5, color="black") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+     title = "All",
+    x = "",
+    y = "Total percentage"
+  ) +
+   theme(
+     plot.title = element_text(size = 11)
+   )
+
+
+exp_duration_env_fig <- exp_duration_motivation_summary %>% 
+  dplyr::filter(study_motivation == "Environmental") %>%
+  ggplot(aes(x=compound_max_duration_exposure, y=percent)) +
+  geom_col(width = 0.1, colour = NA, fill = "#60BD6C") +
+  geom_point(size = 3, colour = "#60BD6C", fill = "#60BD6C") +
+  geom_text(aes(label = percent), vjust=-0.6, size=3.5, color="black") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+     title = "Environmental",
+    x = "",
+    y = "Total percentage"
+  ) +
+   theme(
+     plot.title = element_text(size = 11)
+   )
+
+exp_duration_med_fig <- exp_duration_motivation_summary %>% 
+  dplyr::filter(study_motivation == "Medical") %>%
+  ggplot(aes(x=compound_max_duration_exposure, y=percent)) +
+  geom_col(width = 0.1, colour = NA, fill = "#D359A1") +
+  geom_point(size = 3, colour = "#D359A1", fill = "#D359A1") +
+  geom_text(aes(label = percent), vjust=-0.6, size=3.5, color="black") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+     title = "Medical",
+    x = "",
+    y = "Total percentage"
+  ) +
+   theme(
+     plot.title = element_text(size = 11)
+   )
+
+
+exp_duration_base_fig <- exp_duration_motivation_summary %>% 
+  dplyr::filter(study_motivation == "Basic research") %>%
+  ggplot(aes(x=compound_max_duration_exposure, y=percent)) +
+  geom_col(width = 0.1, colour = NA, fill = "#3C82C4") +
+  geom_point(size = 3, colour = "#3C82C4", fill = "#3C82C4") +
+  geom_text(aes(label = percent), vjust=-0.6, size=3.5, color="black") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+     title = "Basic research",
+    x = "",
+    y = "Total percentage"
+  ) +
+   theme(
+     plot.title = element_text(size = 11)
+   )
+```
+
+
+```{r, fig.width=8.3/3, fig.height=11.7/3}
+exp_duration_all_fig
+exp_duration_env_fig
+exp_duration_med_fig
+exp_duration_base_fig
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("comp_exp_duration_all_fig.pdf", plot = exp_duration_all_fig, width = 8.3/3, height = 11.7/3)
+ggsave("comp_exp_duration_env_fig.pdf", plot = exp_duration_env_fig, width = 8.3/3, height = 11.7/3)
+ggsave("comp_exp_duration_med_fig.pdf", plot = exp_duration_med_fig, width = 8.3/3, height = 11.7/3)
+ggsave("comp_exp_duration_base_fig.pdf", plot = exp_duration_base_fig, width = 8.3/3, height = 11.7/3)
+```
+
+## 14.8 Number of doses
+
+Here I will look at the number of doses used. This was meassured as the total treatments (i.e. inculding control), so if we want to know the number of doses for the compound we need to subtract 1. I have done this below.
+
+```{r}
+n_doses_summary <-  EIPAAB_database %>% 
+  dplyr::filter(!is.na(compound_treatment_levels)) %>% 
+  dplyr::mutate(n_doses = compound_treatment_levels-1) %>% 
+  dplyr::group_by(n_doses) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::mutate(total = sum(n),
+                percent = round((n/total)*100,1),
+                study_motivation = "All")
+n_doses_summary
+```
+Let's see how many use more then 5
+
+```{r}
+n_doses_summary %>% 
+  dplyr::filter(n_doses > 5) %>% 
+  dplyr::summarise(over_5_percent = sum(percent))
+```
+
+Looking by study motivation
+
+```{r}
+n_doses_motivation_summary <-  EIPAAB_database %>% 
+  dplyr::filter(!is.na(compound_treatment_levels)) %>% 
+  dplyr::mutate(n_doses = compound_treatment_levels-1) %>% 
+  dplyr::group_by(n_doses, study_motivation) %>% 
+  dplyr::summarise(n = n(), .groups = 'drop') %>%
+  tidyr::complete(n_doses, study_motivation, fill = list(n = 0)) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round((n/total)*100,1)) 
+n_doses_motivation_summary
+```
+
+Making a plot
+  
+```{r}
+dose_order <- c(1:12, ">12")
+
+doses_fig <- n_doses_motivation_summary %>% 
+  dplyr::mutate(n_doses = as.character(if_else(n_doses>13, 13, n_doses)),
+                n_doses = if_else(n_doses == "13", ">12", n_doses),
+                n_doses = factor(n_doses, levels = dose_order)
+                )%>% 
+  ggplot(aes(x=n_doses, y=percent, colour = study_motivation, 
+             fill = study_motivation, group = study_motivation)) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_line(size = 1) +
+  geom_text(aes(label = percent), vjust=-0.6, size=3.5, color="black") +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  facet_wrap(~study_motivation) +
+  theme(
+    legend.position = c(0.8, 0.9), # Positioning the legend in the top-left corner within the plot
+    legend.justification = c(0, 1) # Ensuring the legend box aligns properly at the top-left corner
+    ) +
+   labs(
+    x = "",
+    y = "Number of studies"
+  ) +
+   theme()
+
+doses_fig
+```
+
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("comp_doses_fig.pdf", plot = doses_fig, width = 8.3, height = 11.7/3)
+```
+
+
+ ## 9.8 Concentrations
+
+Here I will have a look at the min and max and range of doses used in the database. For the MS, I am including only studies that reported in a mass to water volume measure so we can compare standardised unites (ug/L). This was the most common reporting methods (62% of all data; 1090 total).
+
+```{r}
+nrow <- EIPAAB_database %>% 
+  nrow()
+
+EIPAAB_database %>% 
+  dplyr::group_by(compound_min_dose_unit_std) %>% 
+  dplyr::reframe(n = n(),
+                 prop = n/nrow) %>% 
+  dplyr::arrange(desc(n))
+```
+
+Summary of the minimum concentration used (where reported in mass to volume)
+
+```{r}
+EIPAAB_database <- EIPAAB_database %>% 
+  dplyr::mutate(range = compound_max_dose_std - compound_min_dose_std)
+```
+
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::filter(compound_min_dose_unit_std == "ug/L", compound_max_dose_unit_std == "ug/L") %>% 
+  dplyr::mutate(range = compound_max_dose_std - compound_min_dose_std) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::reframe(median_min =  median(compound_min_dose_std, na.rm = T),
+                 sd_min = sd(compound_min_dose_std, na.rm = T),
+                 min_min =  min(compound_min_dose_std, na.rm = T),
+                 max_min =  max(compound_min_dose_std, na.rm = T),
+                 median_max =  median(compound_max_dose_std, na.rm = T),
+                 sd_max = sd(compound_max_dose_std, na.rm = T),
+                 min_max =  min(compound_max_dose_std, na.rm = T),
+                 max_max =  max(compound_max_dose_std, na.rm = T),
+                 median_range =  median(range, na.rm = T),
+                 sd_range = sd(range, na.rm = T),
+                 min_range =  min(range, na.rm = T),
+                 max_range =  max(range, na.rm = T))
+```
+
+A plot for minimum doses, its on the log axis because the distribution is highly skewed
+motivation_colour_theme
+
+```{r}
+motivation_colour_theme <- c("#60BD6C", "#D359A1", "#3C82C4")
+
+min_conc_fig <- EIPAAB_database %>% 
+  dplyr::filter(compound_min_dose_unit_std == "ug/L") %>% 
+  ggplot(aes(x=log(compound_min_dose_std), fill = study_motivation, colour = study_motivation)) +
+  stat_slab(alpha = 0.6, linewidth = 1.5, colour = NA) +
+  stat_pointinterval(point_interval = "median_qi",
+                     position = position_dodge(width = .4, preserve = "single"),
+                     .width = c(0.89, 0.95)) +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation", guide = 'none') +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  labs(
+    x = "Log10 minimum dose (ug/L)",
+    y = "Density"
+  ) +
+  theme(legend.position="bottom")
+
+min_conc_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("comp_min_conc_fig.pdf", plot = min_conc_fig, width = 5, height = 6)
+```
+
+A summary table so we can see what the corresponding raw values are in the plot
+
+```{r}
+min_conc_summary <- EIPAAB_database %>%
+  dplyr::filter(compound_min_dose_unit_std == "ug/L") %>%
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::summarise(
+    median = median(log(compound_min_dose_std), na.rm = TRUE),
+    lower_89 = quantile(log(compound_min_dose_std), probs = 0.11, na.rm = TRUE),
+    upper_89 = quantile(log(compound_min_dose_std), probs = 0.89, na.rm = TRUE),
+    lower_95 = quantile(log(compound_min_dose_std), probs = 0.05, na.rm = TRUE),
+    upper_95 = quantile(log(compound_min_dose_std), probs = 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  # Transform to a format suitable for ggplot annotation
+  pivot_longer(cols = -study_motivation, names_to = "stat", values_to = "value") %>% 
+  dplyr::mutate(vaule_raw = format(exp(value), scientific = FALSE))
+min_conc_summary
+```
+
+A plot for maximum doses, its on the log axis because the distribution is highly skewed
+motivation_colour_theme
+
+```{r}
+motivation_colour_theme <- c("#60BD6C", "#D359A1", "#3C82C4")
+
+max_conc_fig <- EIPAAB_database %>% 
+  dplyr::filter(compound_min_dose_unit_std == "ug/L") %>% 
+  ggplot(aes(x=log(compound_max_dose_std), fill = study_motivation, colour = study_motivation)) +
+  stat_slab(alpha = 0.6, linewidth = 1.5, colour = NA) +
+  stat_pointinterval(point_interval = "median_qi",
+                     position = position_dodge(width = .4, preserve = "single"),
+                     .width = c(0.89, 0.95)) +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation", guide = 'none') +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  labs(
+    x = "Log10 maximum dose (ug/L)",
+    y = "Density"
+  ) +
+  theme(legend.position="bottom")
+
+max_conc_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("comp_max_conc_fig.pdf", plot = max_conc_fig, width = 5, height = 6)
+```
+
+A summary table so we can see what the corresponding raw values are in the plot
+
+```{r}
+max_conc_summary <- EIPAAB_database %>%
+  dplyr::filter(compound_min_dose_unit_std == "ug/L") %>%
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::summarise(
+    median = median(log(compound_max_dose_std), na.rm = TRUE),
+    lower_89 = quantile(log(compound_max_dose_std), probs = 0.11, na.rm = TRUE),
+    upper_89 = quantile(log(compound_max_dose_std), probs = 0.89, na.rm = TRUE),
+    lower_95 = quantile(log(compound_max_dose_std), probs = 0.05, na.rm = TRUE),
+    upper_95 = quantile(log(compound_max_dose_std), probs = 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  # Transform to a format suitable for ggplot annotation
+  pivot_longer(cols = -study_motivation, names_to = "stat", values_to = "value") %>% 
+  dplyr::mutate(vaule_raw = format(exp(value), scientific = FALSE))
+max_conc_summary
+```
+
+A plot for the range of doses, its on the log axis because the distribution is highly skewed. This includes only studies that had more then one dose and reported concentration in a mass to volume metric. 
+
+```{r}
+motivation_colour_theme <- c("#60BD6C", "#D359A1", "#3C82C4")
+
+range_conc_fig <- EIPAAB_database %>% 
+  dplyr::filter(compound_min_dose_unit_std == "ug/L") %>% 
+  dplyr::filter(range > 0) %>% 
+  ggplot(aes(x=log(range), fill = study_motivation, colour = study_motivation)) +
+  stat_slab(alpha = 0.6, linewidth = 1.5, colour = NA) +
+  stat_pointinterval(point_interval = "median_qi",
+                     position = position_dodge(width = .4, preserve = "single"),
+                     .width = c(0.89, 0.95)) +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation", guide = 'none') +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  labs(
+    x = "Log10 range (ug/L)",
+    y = "Density"
+  ) +
+  theme(legend.position="bottom")
+
+range_conc_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("comp_range_conc_fig.pdf", plot = range_conc_fig, width = 5, height = 6)
+```
+
+
+A summary table so we can see what the corresponding raw values are in the plot
+
+```{r}
+range_conc_summary <- EIPAAB_database %>%
+  dplyr::filter(compound_min_dose_unit_std == "ug/L",
+                range > 0) %>%
+  dplyr::group_by(study_motivation) %>% 
+  summarise(
+    median = median(log(range), na.rm = TRUE),
+    lower_89 = quantile(log(range), probs = 0.055, na.rm = TRUE),
+    upper_89 = quantile(log(range), probs = 0.945, na.rm = TRUE),
+    lower_95 = quantile(log(range), probs = 0.025, na.rm = TRUE),
+    upper_95 = quantile(log(range), probs = 0.975, na.rm = TRUE)
+  ) %>%
+  # Transform to a format suitable for ggplot annotation
+  pivot_longer(cols = -study_motivation, names_to = "stat", values_to = "value") %>% 
+  dplyr::mutate(vaule_raw = format(exp(value), scientific = FALSE))
+range_conc_summary
+```
+
+```{r}
+env_min_conc_fig <- EIPAAB_database %>% 
+  dplyr::filter(study_motivation == "Environmental") %>% 
+  dplyr::filter(compound_min_dose_unit_std == "ug/L") %>% 
+  ggplot(aes(x=log(compound_min_dose_std))) +
+  stat_slab(aes(alpha = 0.8, linewidth = 1.5)) +
+  stat_pointinterval(point_interval = "median_qi",
+                     position = position_dodge(width = .4, preserve = "single"),
+                     .width = c(0.89, 0.95)) +
+  theme_classic() +
+  theme(legend.position="none")
+
+env_min_conc_fig
+```
+A summary table so we can see what the corresponding raw values are in the plot
+
+```{r}
+env_conc_summary <- EIPAAB_database %>%
+  filter(study_motivation == "Environmental", 
+         compound_min_dose_unit_std == "ug/L") %>%
+  summarise(
+    median = median(log(compound_min_dose_std), na.rm = TRUE),
+    lower_89 = quantile(log(compound_min_dose_std), probs = 0.055, na.rm = TRUE),
+    upper_89 = quantile(log(compound_min_dose_std), probs = 0.945, na.rm = TRUE),
+    lower_95 = quantile(log(compound_min_dose_std), probs = 0.025, na.rm = TRUE),
+    upper_95 = quantile(log(compound_min_dose_std), probs = 0.975, na.rm = TRUE)
+  ) %>%
+  # Transform to a format suitable for ggplot annotation
+  pivot_longer(cols = everything(), names_to = "stat", values_to = "value") %>% 
+  dplyr::mutate(vaule_raw = format(exp(value), scientific = FALSE))
+env_conc_summary
+```
+
+## 14.9 Exposure location
+
+Where the exposure itself was conducted
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(compound_exposure_location) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::mutate(total = sum(n),
+                perecent = round(n/total*100,1))
+```
+
+# 15 Behaviour
+
+## 15.1 Counts of catagoires
+
+First I will make a new variable called beahv_catgory_n, which will look at how many of our 10 broad behavioural categories were measured in the article. 
+
+The 10 over-arching categories were: (1) movement and locomotion, (2) pre-mating and mating behaviour, (3) post-mating behaviour, (4) aggression, (5) sociality, (6) cognition and learning, (7) anxiety and boldness, (8) foraging and feeding, (9) antipredator behaviour, and (10) other behaviours not categorised
+
+This will take the some of all the behaviour categories., so can range from 1 to 10 for a single behavioural category to all categories.
+
+```{r}
+EIPAAB_database <- EIPAAB_database %>%
+  dplyr::mutate(behav_category_n = rowSums(across(starts_with("behav_") & ends_with("_boolean"))))
+```
+
+
+The majority of evidence seems to be based on a single behavioural category
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(behav_category_n) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::mutate(percent = round(n/sum(n)*100,1))
+```
+Is this the same by study motivation 
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(behav_category_n, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1))
+```
+
+
+
+Here I make a dataframe where I have pivoted the data to long formate based on each of the 10 behaviour categories. This dataframe can be used to ask more spefic questiosn about the relationship between species, compound, and behaviour. 
+
+But first let's use it to see what behaviours are most common overall all, and within each study motivation. 
+  
+```{r}
+binary_behav <- EIPAAB_database %>% 
+  dplyr::select((starts_with("behav_") & ends_with("_boolean"))) %>% 
+  colnames()
+
+PICO_long <- EIPAAB_database %>% 
+  tidyr::pivot_longer(., 
+                      cols = all_of(binary_behav),
+                      names_to = "behav_category", 
+                      values_to = "value") %>% 
+  dplyr::select(article_id, study_motivation, species_name, species_class, 
+                compound_name, compound_atc_level_3, behav_category, value) %>% 
+  dplyr::mutate(behav_category = behav_category %>% str_remove("behav_") %>% str_remove("_boolean"))
+PICO_long
+```
+
+
+```{r}
+behav_overall <- PICO_long %>% 
+  dplyr::group_by(behav_category) %>% 
+  reframe(n = sum(value)) %>% 
+  dplyr::mutate(percent = round(n/sum(n)*100, 1)) %>% 
+  dplyr::arrange(desc(n))
+behav_overall
+```
+
+```{r}
+behav_motivation <- PICO_long %>% 
+  dplyr::group_by(behav_category, study_motivation) %>% 
+  dplyr::summarise(n = sum(value), .groups = 'drop') %>%
+  tidyr::complete(behav_category, study_motivation, fill = list(n = 0)) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation) %>% 
+  dplyr::arrange(desc(study_motivation))
+
+behav_overall <- behav_motivation %>% 
+  dplyr::group_by(behav_category) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(percent = round(n/sum(n)*100,1),
+                study_motivation = "Overall")
+
+behav_motivation <- rbind(behav_overall, behav_motivation)
+behav_motivation
+```
+
+
+```{r}
+motivation_colour_theme <- c("grey", "#60BD6C", "#D359A1", "#3C82C4")
+behav_order <- c("movement", "boldness", "foraging", "antipredator", "mating", "post_mating", "agression", "sociality", "cognition", "noncat")
+study_motivation_order <- c("Overall", "Environmental", "Medical", "Basic research")
+
+
+behav_motivation_fig <- behav_motivation %>% 
+  dplyr::mutate(behav_category = factor(behav_category, levels = rev(behav_order)),
+                study_motivation = factor(study_motivation, levels = study_motivation_order)) %>% 
+  ggplot(aes(x=behav_category, y=percent, colour = study_motivation, 
+             fill = study_motivation), group = study_motivation) +
+  geom_col(width = 0.1, colour = NA) +
+  geom_point(size = 3) +
+  geom_text(aes(label = percent), vjust = -0.3, size=3.5, color="black") +
+  theme_classic() +
+  facet_grid(cols = vars(study_motivation)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  coord_flip() +
+  labs(
+    x = "",
+    y = "Percentage"
+  ) +
+  theme(
+     plot.title = element_text(size = 11)
+   )
+
+behav_motivation_fig
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("behav_motivation_fig.pdf", plot = behav_motivation_fig, width = 10, height = 5)
+```
+
+## 15.2 Behaviour sub-categories
+
+```{r}
+behav_select <- EIPAAB_database %>% 
+  dplyr::select((starts_with("behav_") & !ends_with("_boolean") & !ends_with("is_social_context") & !ends_with("test_location") & !ends_with("category_n"))) %>% 
+  colnames()
+
+
+behav_sub_cat_long <- EIPAAB_database %>% 
+  tidyr::pivot_longer(., 
+                      cols = all_of(behav_select),
+                      names_to = "parent_category", 
+                      values_to = "sub_category") %>% 
+  dplyr::select(article_id, study_motivation, species_name, species_class, 
+                compound_name, compound_atc_level_3, parent_category, sub_category) %>% 
+  dplyr::mutate(parent_category = parent_category %>% str_remove("behav_")) %>% 
+  tidyr::separate_rows(sub_category, sep = ";") %>% 
+  dplyr::filter(!is.na(sub_category))
+```
+
+
+```{r}
+behav_sub_cat_summary <- behav_sub_cat_long %>% 
+  dplyr::group_by(study_motivation, parent_category, sub_category) %>% 
+  dplyr::summarise(n_sub_cat = n(), .groups = 'drop') %>% 
+  dplyr::group_by(study_motivation, parent_category) %>% 
+  dplyr::mutate(n_parent = sum(n_sub_cat)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation) %>%
+  dplyr::mutate(n_motivation = sum(n_sub_cat)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent_sub_cat = n_sub_cat/n_parent,
+                percent_parent = n_parent/n_motivation)
+behav_sub_cat_summary
+```
+
+```{r}
+ring_plot_subcat <- behav_sub_cat_summary %>%
+  dplyr::group_by(study_motivation, parent_category) %>% 
+  dplyr::mutate(ymax = cumsum(percent_sub_cat),
+                ymin = lag(ymax,1),
+                ymin = if_else(is.na(ymin), 0, ymin),
+                labelPosition = (ymax+ymin)/2,
+                label = paste0(sub_category, "\n (n = ", n_sub_cat, ")")) %>% 
+  dplyr::ungroup()
+```
+
+### 15.2.1 Movement plots 
+
+First making a complete dataset (adding zeros for missing sub-categories. in each motivation), and ordering by overall prevalence of sub-categories.
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "movement") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+movement_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "movement") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_movement_subcat_fig <- movement_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_movement_subcat_fig
+```
+
+
+```{r, warning=FALSE}
+n_subcat <- movement_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_movement_subcat_fig.pdf", plot = beh_movement_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+If you would like to make a doughnut chart here's the code. However, for categories that have 5 or more sub-categories like movement I don't think this is the clearest way to present the data.
+
+```{r}
+movement_subcat %>% 
+  dplyr::arrange(sub_category) %>%
+  dplyr::arrange(study_motivation) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(ymax = cumsum(percent_sub_cat),
+                ymin = lag(ymax,1),
+                ymin = if_else(is.na(ymin), 0, ymin),
+                labelPosition = (ymax+ymin)/2,
+                label = if_else(n_sub_cat == 0, NA, n_sub_cat)) %>% 
+  dplyr::ungroup() %>%
+  ggplot(aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=sub_category)) +
+  geom_rect() +
+  coord_polar(theta="y") + 
+  geom_label(x=4, aes(y=labelPosition, label=label), size=3, alpha = 0.8) +
+  facet_wrap(~study_motivation) +
+  xlim(c(2, 5)) +
+  theme_void()  +
+  theme(legend.position = "bottom")
+```
+
+### 15.2.2 Boldness plots 
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "boldness") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+boldness_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "boldness") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_boldness_subcat_fig <- boldness_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_boldness_subcat_fig
+```
+
+
+```{r, warning=FALSE}
+n_subcat <- boldness_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_boldness_subcat_fig.pdf", plot = beh_boldness_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+
+### 15.2.3 Foraging plots 
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "foraging") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+foraging_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "foraging") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_foraging_subcat_fig <- foraging_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_foraging_subcat_fig
+```
+
+```{r, warning=FALSE}
+n_subcat <- foraging_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_foraging_subcat_fig.pdf", plot = beh_foraging_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+
+### 15.2.4 Antipredator plots 
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "antipredator") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+antipredator_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "antipredator") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_antipredator_subcat_fig <- antipredator_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_antipredator_subcat_fig
+```
+
+```{r, warning=FALSE}
+n_subcat <- antipredator_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_antipredator_subcat_fig.pdf", plot = beh_antipredator_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+
+### 15.2.5 Mating plots 
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "mating") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+mating_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "mating") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_mating_subcat_fig <- mating_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_mating_subcat_fig
+```
+
+
+
+
+```{r, warning=FALSE}
+n_subcat <- mating_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_mating_subcat_fig.pdf", plot = beh_mating_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+
+### 15.2.6 Post mating plots 
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "post_mating") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+post_mating_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "post_mating") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_post_mating_subcat_fig <- post_mating_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_post_mating_subcat_fig
+```
+
+
+```{r, warning=FALSE}
+n_subcat <- post_mating_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_post_mating_subcat_fig.pdf", plot = beh_post_mating_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+
+### 15.2.7 Agression plots 
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "agression") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+agression_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "agression") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_agression_subcat_fig <- agression_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_agression_subcat_fig
+```
+
+
+```{r, warning=FALSE}
+n_subcat <- agression_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_agression_subcat_fig.pdf", plot = beh_agression_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+
+### 15.2.8 Sociality plots 
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "sociality") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+sociality_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "sociality") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_sociality_subcat_fig <- sociality_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_sociality_subcat_fig
+```
+
+
+```{r, warning=FALSE}
+n_subcat <- sociality_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_sociality_subcat_fig.pdf", plot = beh_sociality_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+
+### 15.2.9 Cognition plots 
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "cognition") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+cognition_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "cognition") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_cognition_subcat_fig <- cognition_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_cognition_subcat_fig
+```
+
+
+```{r, warning=FALSE}
+n_subcat <- cognition_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_cognition_subcat_fig.pdf", plot = beh_cognition_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+### 15.2.10 Non-categories plots 
+
+```{r}
+sub_category_order <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "noncat") %>% 
+  dplyr::group_by(sub_category) %>% 
+  dplyr::reframe(n = sum(n_sub_cat)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(sub_category)
+
+noncat_subcat <- behav_sub_cat_summary %>% 
+  dplyr::filter(parent_category == "noncat") %>% 
+  dplyr::select(study_motivation, sub_category, percent_sub_cat, n_sub_cat, percent_parent) %>% 
+  tidyr::complete(sub_category, study_motivation, fill = list(percent_sub_cat = 0, n_sub_cat = 0)) %>% 
+  dplyr::mutate(sub_category = factor(sub_category, levels = sub_category_order))
+```
+
+
+```{r}
+beh_noncat_subcat_fig <- noncat_subcat %>% 
+  dplyr::mutate(percent_sub_cat = round(percent_sub_cat,3)*100) %>% 
+  ggplot(aes(x=sub_category, y=percent_sub_cat, colour = study_motivation, fill = study_motivation, group = study_motivation)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.1) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) +
+  geom_text(aes(label = percent_sub_cat), hjust=-0.6, size=3.5, color="black", position =  position_dodge(width = 0.8)) +
+  scale_colour_manual(values = motivation_colour_theme, name = "Study motivation") +
+  scale_fill_manual(values = motivation_colour_theme, name = "Study motivation") +
+  theme_classic() +
+  coord_flip() +
+   labs(
+    x = "",
+    y = "Percentage of data"
+  ) +
+   theme(
+     legend.position = "none"
+   )
+
+beh_noncat_subcat_fig
+```
+
+
+```{r, warning=FALSE}
+n_subcat <- noncat_subcat %>% 
+  dplyr::distinct(sub_category) %>% 
+  nrow(.)/10
+
+setwd(figures_path)
+ggsave("beh_noncat_subcat_fig.pdf", plot = beh_noncat_subcat_fig, width = 10, height = 11.7*n_subcat)
+```
+
+
+## 15.3 Behaviour location 
+
+Check where behaviour was meassured.
+
+```{r}
+behav_location_summary <- EIPAAB_database %>% 
+  dplyr::group_by(study_motivation, behav_test_location) %>% 
+  dplyr::reframe(n = n()) %>% 
+  tidyr::separate_rows(behav_test_location, sep = ";") %>% 
+  dplyr::group_by(study_motivation, behav_test_location) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  tidyr::complete(behav_test_location, study_motivation, fill = list(n = 0)) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+behav_location_overall <- behav_location_summary %>% 
+  dplyr::group_by(behav_test_location) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(percent = round(n/sum(n)*100,1),
+                study_motivation = "Overall")
+
+behav_location_summary <-  rbind(behav_location_overall, behav_location_summary) %>% 
+  dplyr::arrange(study_motivation)
+
+behav_location_summary
+```
+
+
+## 15.4 Social context
+
+Check how often behaviour was measured in a social context
+
+
+```{r}
+behav_social_context_summary <- EIPAAB_database %>% 
+  dplyr::group_by(study_motivation, behav_is_social_context) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+behav_social_context_overall <- behav_social_context_summary %>% 
+  dplyr::group_by(behav_is_social_context) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(percent = round(n/sum(n)*100,1),
+                study_motivation = "Overall")
+
+behav_social_context_summary <-  rbind(behav_social_context_overall, behav_social_context_summary) %>% 
+  dplyr::arrange(study_motivation)
+
+behav_social_context_summary
+```
+
+
+## 15.5 Check how behaviour was meassured
+
+Check how often behaviour was meassured in a social context
+
+```{r}
+behav_behav_scoring_summary <- EIPAAB_database %>% 
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(study_motivation, validity_behav_scoring_method) %>% 
+  dplyr::reframe(n = n()) %>% 
+  tidyr::separate_rows(validity_behav_scoring_method, sep = ";") %>% 
+  dplyr::group_by(study_motivation, validity_behav_scoring_method) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  tidyr::complete(validity_behav_scoring_method, study_motivation, fill = list(n = 0)) %>%
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+behav_behav_scoring_overall <- behav_behav_scoring_summary %>% 
+  dplyr::group_by(validity_behav_scoring_method) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(percent = round(n/sum(n)*100,1),
+                study_motivation = "Overall")
+
+behav_behav_scoring_summary <-  rbind(behav_behav_scoring_overall, behav_behav_scoring_summary) %>% 
+  dplyr::arrange(study_motivation)
+
+behav_behav_scoring_summary
+```
+
+```{r}
+behav_behav_scoring_summary %>% 
+  dplyr::filter(study_motivation  == "Overall")
+```
+
+# 16 Linking PICO
+
+Making a dataframe for a flow diagram (sankey plot)
+
+```{r}
+PICO_df <- EIPAAB_database %>%
+  dplyr::mutate(behav_cat = case_when(
+    behav_movement_boolean == 1 ~ "Movement",
+    behav_boldness_boolean == 1 ~ "Boldness",
+    behav_foraging_boolean == 1 ~ "Foraging",
+    behav_antipredator_boolean == 1 ~ "Antipredator",
+    behav_mating_boolean == 1 ~ "Mating",
+    behav_post_mating_boolean == 1 ~ "Post mating",
+    behav_agression_boolean == 1 ~ "Agression",
+    behav_sociality_boolean == 1 ~ "Sociality",
+    behav_cognition_boolean == 1 ~ "Cognition",
+    behav_noncat_boolean == 1 ~ "Not categorised",
+  )) %>% 
+  dplyr::select(study_motivation, compound_name, compound_atc_level_3, species_name, species_class, behav_cat) 
+PICO_df
+```
+
+Let's look at the 10 most common classes and ATCs
+
+```{r}
+PICO_class_atc <- PICO_df %>% 
+  dplyr::filter(!is.na(compound_atc_level_3), !is.na(species_class)) %>% 
+  tidyr::separate_rows(compound_atc_level_3, sep = ";") %>% 
+  dplyr::mutate(compound_atc_level_3 = str_trim(compound_atc_level_3))
+
+PICO_atc_10 <- PICO_class_atc %>% 
+  dplyr::group_by(compound_atc_level_3) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::pull(compound_atc_level_3)
+
+PICO_class_10 <- PICO_class_atc %>% 
+  dplyr::group_by(species_class) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::pull(species_class)
+
+PICO_class_10 <- PICO_class_atc %>% 
+  dplyr::group_by(species_class) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:10) %>% 
+  dplyr::pull(species_class)
+
+
+behav_cat_order <- PICO_class_atc %>% 
+  dplyr::filter(compound_atc_level_3 %in% PICO_atc_10 & species_class %in% PICO_class_10) %>%
+  dplyr::group_by(behav_cat) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::pull(behav_cat)
+
+
+PICO_class_atc_10 <- PICO_class_atc %>% 
+  dplyr::filter(compound_atc_level_3 %in% PICO_atc_10 & species_class %in% PICO_class_10) %>% 
+  dplyr::mutate(compound_atc_level_3 = factor(compound_atc_level_3, levels = PICO_atc_10),
+                species_class = factor(species_class, levels = PICO_class_10),
+                behav_cat = factor(behav_cat, levels = behav_cat_order)) %>% 
+  dplyr::select(compound_atc_level_3, behav_cat, species_class)
+```
+
+
+```{r}
+PICO_atc_class_sankey <- highcharter::hchart(data_to_sankey(PICO_class_atc_10), "sankey")
+PICO_atc_class_sankey
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+htmlwidgets::saveWidget(widget = PICO_atc_class_sankey, file = "PICO_atc_class_sankey.html")
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+# Make a webshot in pdf : high quality but can not choose printed zone
+webshot::webshot("PICO_atc_class_sankey.html" , "PICO_atc_class_sankey.pdf", delay = 10)
+```
+
+
+## 16.1 Common compounds
+
+Lets take a closer look at the 3 most common compounds
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(compound_name) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:3)
+```
+
+
+### 16.1.1 Fluoxetine 
+
+```{r}
+spp_order <- PICO_df %>% 
+  dplyr::filter(compound_name == "Fluoxetine") %>% 
+  dplyr::group_by(species_name) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:5) %>% 
+  pull(species_name)
+
+beh_order <- PICO_df %>% 
+  dplyr::filter(compound_name == "Fluoxetine" & species_name %in% spp_order) %>% 
+  dplyr::group_by(behav_cat) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  pull(behav_cat)
+
+PICO_fluoxetine <- PICO_df %>% 
+  dplyr::filter(compound_name == "Fluoxetine" & species_name %in% spp_order) %>% 
+  dplyr::mutate(
+                species_name = factor(species_name, levels = spp_order),
+                behav_cat = factor(behav_cat, levels = beh_order),
+  ) %>% 
+  dplyr::select(species_name, behav_cat)
+```
+
+
+```{r}
+PICO_fluoxetine %>% 
+  dplyr::filter(species_name == "Betta splendens") %>% 
+  dplyr::distinct(behav_cat)
+```
+
+
+```{r}
+PICO_fluoxetine_sankey <- highcharter::hchart(data_to_sankey(PICO_fluoxetine), "sankey", name = "PICO")
+PICO_fluoxetine_sankey
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+htmlwidgets::saveWidget(widget = PICO_fluoxetine_sankey, file = "PICO_fluoxetine_sankey.html")
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+# Make a webshot in pdf : high quality but can not choose printed zone
+webshot::webshot("PICO_fluoxetine_sankey.html" , "PICO_fluoxetine_sankey.pdf", delay = 10)
+```
+
+
+### 16.1.2 Diazepam 
+
+```{r}
+spp_order <- PICO_df %>% 
+  dplyr::filter(compound_name == "Diazepam") %>% 
+  dplyr::group_by(species_name) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:5) %>% 
+  pull(species_name)
+
+beh_order <- PICO_df %>% 
+  dplyr::filter(compound_name == "Diazepam" & species_name %in% spp_order) %>% 
+  dplyr::group_by(behav_cat) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  pull(behav_cat)
+
+PICO_diazepam <- PICO_df %>% 
+  dplyr::filter(compound_name == "Diazepam" & species_name %in% spp_order) %>% 
+  dplyr::mutate(
+                species_name = factor(species_name, levels = spp_order),
+                behav_cat = factor(behav_cat, levels = beh_order),
+  ) %>% 
+  dplyr::select(species_name, behav_cat)
+```
+
+
+```{r}
+PICO_diazepam_sankey <- highcharter::hchart(data_to_sankey(PICO_diazepam), "sankey", name = "PICO")
+PICO_diazepam_sankey
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+htmlwidgets::saveWidget(widget = PICO_diazepam_sankey, file = "PICO_diazepam_sankey.html")
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+# Make a webshot in pdf : high quality but can not choose printed zone
+webshot::webshot("PICO_diazepam_sankey.html" , "PICO_diazepam_sankey.pdf", delay = 10)
+```
+
+
+### 16.3.1 17-alpha-ethinylestradiol 
+
+```{r}
+spp_order <- PICO_df %>% 
+  dplyr::filter(compound_name == "17-alpha-ethinylestradiol") %>% 
+  dplyr::group_by(species_name) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::slice(1:5) %>% 
+  pull(species_name)
+
+beh_order <- PICO_df %>% 
+  dplyr::filter(compound_name == "17-alpha-ethinylestradiol" & species_name %in% spp_order) %>% 
+  dplyr::group_by(behav_cat) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  pull(behav_cat)
+
+PICO_EE2 <- PICO_df %>% 
+  dplyr::filter(compound_name == "17-alpha-ethinylestradiol" & species_name %in% spp_order) %>% 
+  dplyr::mutate(
+                species_name = factor(species_name, levels = spp_order),
+                behav_cat = factor(behav_cat, levels = beh_order),
+  ) %>% 
+  dplyr::select(species_name, behav_cat)
+```
+
+
+```{r}
+PICO_EE2_sankey <- highcharter::hchart(data_to_sankey(PICO_EE2), "sankey", name = "PICO")
+PICO_EE2_sankey
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+htmlwidgets::saveWidget(widget = PICO_EE2_sankey, file = "PICO_EE2_sankey.html")
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+# Make a webshot in pdf : high quality but can not choose printed zone
+webshot::webshot("PICO_EE2_sankey.html" , "PICO_EE2_sankey.pdf", delay = 10)
+```
+
+# 17 Knowledge clusters and gaps
+
+Identify knowledge clusters and gaps.
+
+We will also do this by study motivation, because the knowleage gaps will be motivation spesfic. 
+
+## 17.1 Species class
+
+First look by species class
+
+Making a dataframe
+
+```{r}
+behav_cat_class_long <- PICO_df %>% 
+  dplyr::group_by(study_motivation, species_class, behav_cat) %>% 
+  dplyr::reframe(count = n()) %>% 
+  tidyr::complete(study_motivation, species_class, behav_cat, fill = list(count = 0)) %>% 
+  dplyr::group_by(study_motivation, species_class) %>% 
+  dplyr::mutate(total_class_motivation = sum(count)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(rel_percent = round(count/total_class_motivation*100,0),
+                rel_percent = if_else(is.finite(rel_percent), rel_percent, 0)
+  )
+
+class_order <- behav_cat_class_long %>% 
+  dplyr::group_by(species_class) %>% 
+  dplyr::reframe(n = sum(count)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(species_class)
+
+behav_cat_order <- behav_cat_class_long %>% 
+  dplyr::group_by(behav_cat) %>% 
+  dplyr::reframe(n = sum(count)) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::pull(behav_cat)
+
+behav_cat_class_long <- behav_cat_class_long %>% 
+  dplyr::mutate(species_class = factor(species_class, levels = class_order),
+                behav_cat = factor(behav_cat, levels = behav_cat_order)
+                )
+```
+
+```{r}
+cust_col <- colorRampPalette(c("#FDEDF4", "#F068A7"))(30)
+
+behav_class_hm <- behav_cat_class_long %>% 
+  ggplot(aes(x = behav_cat, y = species_class, fill = count)) +
+  geom_tile() +
+  #geom_text(aes(label = ifelse(count == 0, NA, count)), color = "black", size = 3) +
+  scale_fill_gradientn(colors = cust_col, na.value = "white", limits = c(1, max(behav_cat_class_long$count, na.rm = TRUE)), guide = "none") +
+  theme_bw() +
+  facet_wrap(~study_motivation) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    x = "Behaviour",
+    y = "Species Class",
+    fill = "Count"
+  )
+behav_class_hm
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("behav_class_hm.pdf", plot = behav_class_hm, width = 8.3, height = 11.7/2)
+```
+
+
+This one uses relative vaules for each class (e.g. row in the heat map)
+
+```{r}
+cust_col <- colorRampPalette(brewer.pal(4, "Oranges"))(30)
+
+behav_class_rel_hm <- behav_cat_class_long %>% 
+  ggplot(aes(x = behav_cat, y = species_class, fill = rel_percent)) +
+  geom_tile() +
+ #geom_text(aes(label = ifelse(rel_percent == 0, NA, rel_percent)), color = "black", size = 3) +
+  scale_fill_gradientn(colors = cust_col, na.value = "white", limits = c(1, max(behav_cat_class_long$count, na.rm = TRUE)), guide = "none") +
+  theme_bw() +
+  facet_wrap(~study_motivation) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    x = "Behaviour",
+    y = "Species Class",
+    fill = "Count"
+  )
+behav_class_rel_hm
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("behav_class_rel_hm.pdf", plot = behav_class_rel_hm, width = 8.3, height = 11.7/2)
+```
+
+
+## 17.2 Compound cluster/gaps
+
+Now looking by compound
+
+Making a dataframe
+
+```{r}
+behav_atc_long <- PICO_df %>% 
+  separate_rows(compound_atc_level_3, sep = ";") %>%
+  dplyr::group_by(study_motivation, compound_atc_level_3, behav_cat) %>% 
+  dplyr::reframe(count = n()) %>% 
+  tidyr::complete(study_motivation, compound_atc_level_3, behav_cat, fill = list(count = 0)) %>% 
+  dplyr::group_by(study_motivation, compound_atc_level_3) %>% 
+  dplyr::mutate(total_atc_motivation = sum(count)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(rel_percent = round(count/total_atc_motivation*100,0),
+                rel_percent = if_else(is.finite(rel_percent), rel_percent, 0)
+  )
+
+atc_order <- behav_atc_long %>% 
+  dplyr::group_by(compound_atc_level_3) %>% 
+  dplyr::reframe(n = sum(count)) %>% 
+  dplyr::arrange(n) %>% 
+  dplyr::pull(compound_atc_level_3)
+
+behav_cat_order <- behav_atc_long %>% 
+  dplyr::group_by(behav_cat) %>% 
+  dplyr::reframe(n = sum(count)) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  dplyr::pull(behav_cat)
+
+behav_atc_long <- behav_atc_long %>% 
+  dplyr::mutate(compound_atc_level_3 = factor(compound_atc_level_3, levels = atc_order),
+                behav_cat = factor(behav_cat, levels = behav_cat_order)
+                )
+```
+
+```{r}
+behav_atc_long %>% 
+  dplyr::distinct(compound_atc_level_3)
+```
+
+
+
+```{r}
+cust_col <- colorRampPalette(c("#FDEDF4", "#F068A7"))(30)
+
+behav_atc_hm <- behav_atc_long %>% 
+  ggplot(aes(x = behav_cat, y = compound_atc_level_3, fill = count)) +
+  geom_tile() +
+  #geom_text(aes(label = ifelse(count == 0, NA, count)), color = "black", size = 3) +
+  scale_fill_gradientn(colors = cust_col, na.value = "white", limits = c(1, max(behav_atc_long$count, na.rm = TRUE)), guide = "none") +
+  theme_void() +
+  facet_wrap(~study_motivation) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    x = "Behaviour",
+    y = "Species Class",
+    fill = "Count"
+  )
+behav_atc_hm
+```
+
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("behav_class_hm.pdf", plot = behav_class_hm, width = 8.3, height = 11.7/2)
+```
+
+
+This one uses relative vaules for each class (e.g. row in the heat map)
+
+```{r}
+cust_col <- colorRampPalette(brewer.pal(4, "Oranges"))(30)
+
+behav_class__rel_hm <- behav_cat_class_long %>% 
+  ggplot(aes(x = behav_cat, y = species_class, fill = rel_percent)) +
+  geom_tile() +
+ #geom_text(aes(label = ifelse(rel_percent == 0, NA, rel_percent)), color = "black", size = 3) +
+  scale_fill_gradientn(colors = cust_col, na.value = "white", limits = c(1, max(behav_cat_class_long$count, na.rm = TRUE)), guide = "none") +
+  theme_bw() +
+  facet_wrap(~study_motivation) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    x = "Behaviour",
+    y = "Species Class",
+    fill = "Count"
+  )
+behav_class__rel_hm
+```
+
+```{r, warning=FALSE}
+setwd(figures_path)
+ggsave("behav_class__rel_hm.pdf", plot = behav_class__rel_hm, width = 8.3, height = 11.7/2)
+```
+
+
+
+# 18 Additional biomarkers
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::group_by(additional_biomarkers) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::mutate(total = sum(n),
+                percent = n/total)
+```
+
+
+```{r}
+EIPAAB_database %>% 
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::group_by(validity_survival_growth_reproduction) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::mutate(total = sum(n),
+                percent = n/total)
+```
+
+# 19 Validity
+
+
+This a list of all 19 metadata that relate to our validity information.
+
+c("validity_guideline", "validity_good_laboratory_practice", "validity_survival_growth_reproduction", "validity_animal_feeding", "validity_water_quality", "validity_light_cycle", "validity_randomization", "validity_behav_scoring_method", "validity_behav_blinding", "validity_conflict_statement", "species_source", "species_stage", "species_sex", "compound_min_duration_exposure", "compound_max_duration_exposure", "validity_compound_cas_reported", "validity_compound_purity_reported", "validity_compound_water_verification", "validity_compound_animal_verification")
+
+## 19.1 Did it follow a guideline (CRED Q1)
+
+```{r}
+guideline <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_guideline, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+guideline_all <-  guideline %>% 
+  dplyr::group_by(validity_guideline) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1))
+  
+
+guideline_all <- rbind(guideline_all, guideline) %>% 
+  dplyr::filter(validity_guideline == "Yes")
+guideline_all
+```
+
+
+## 19.2 Did it use good laboratory practice (CRED Q2)
+
+```{r}
+GLP <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_good_laboratory_practice, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+GLP_all <-  GLP %>% 
+  dplyr::group_by(validity_good_laboratory_practice) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+GLP_all <- rbind(GLP_all, GLP) %>% 
+  dplyr::filter(validity_good_laboratory_practice == "Yes")
+GLP_all
+```
+
+
+## 19.3 Did it report survival, growth and/or reproduction (CRED Q3)
+
+
+```{r}
+survival_growth_reproduction <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_survival_growth_reproduction, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+survival_growth_reproduction_all <-  survival_growth_reproduction %>% 
+  dplyr::group_by(validity_survival_growth_reproduction) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1))
+  
+
+survival_growth_reproduction_all <- rbind(survival_growth_reproduction_all, survival_growth_reproduction)  %>% 
+  dplyr::filter(validity_survival_growth_reproduction == "Yes")
+survival_growth_reproduction_all
+```
+
+
+## 19.4 Did it report compound cas (CRED Q5)
+
+```{r}
+CAS <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_compound_cas_reported, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+CAS_all <-  CAS %>% 
+  dplyr::group_by(validity_compound_cas_reported) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1))
+  
+
+CAS_all <- rbind(CAS_all, CAS)  %>% 
+  dplyr::filter(validity_compound_cas_reported == "Yes")
+CAS_all
+```
+
+## 19.5 Did it report compound purity (CRED Q6)
+
+```{r}
+purity <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_compound_purity_reported, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+purity_all <-  purity %>% 
+  dplyr::group_by(validity_compound_purity_reported) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+purity_all <- rbind(purity_all, purity) %>% 
+  dplyr::filter(validity_compound_purity_reported == "Yes")
+purity_all
+```
+
+## 19.6 Species infomartion  (CRED Q8)
+
+### 19.6.1 Life stage
+
+```{r}
+stage <- EIPAAB_database %>%
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(species_stage, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  tidyr::separate_rows(species_stage, sep = ";") %>% 
+  dplyr::group_by(species_stage, study_motivation) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+stage_all <-  stage %>% 
+  dplyr::group_by(species_stage) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1))
+  
+
+stage_all <- rbind(stage_all, stage) %>% 
+  dplyr::filter(species_stage == "Unknown or not specified") %>% 
+  dplyr::mutate(percent_reported = 100-percent)
+stage_all
+```
+### 19.6.1 Sex
+
+```{r}
+sex <- EIPAAB_database %>%
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(species_sex, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  tidyr::separate_rows(species_sex, sep = ";") %>% 
+  dplyr::group_by(species_sex, study_motivation) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+sex_all <-  sex %>% 
+  dplyr::group_by(species_sex) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1))
+  
+
+sex_all <- rbind(sex_all, sex) %>% 
+  dplyr::filter(species_sex == "Unknown or not specified") %>% 
+  dplyr::mutate(percent_reported = 100-percent)
+sex_all
+```
+
+## 19.7 The soruce of species (CRED Q9)
+
+```{r}
+source <- EIPAAB_database %>%
+  dplyr::group_by(unique_population_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(species_source, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  tidyr::separate_rows(species_source, sep = ";") %>% 
+  dplyr::group_by(species_source, study_motivation) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+source_all <-  source %>% 
+  dplyr::group_by(species_source) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1))
+  
+
+source_all <- rbind(source_all, source) %>% 
+  dplyr::filter(species_source == "Not reported") %>% 
+  dplyr::mutate(percent_reported = 100-percent)
+source_all
+```
+
+## 19.8 experimental system (CRED Q11)
+
+### 19.8.1 Feeding
+
+
+```{r}
+feeding <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_animal_feeding, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+feeding_all <-  feeding %>% 
+  dplyr::group_by(validity_animal_feeding) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+feeding_all <- rbind(feeding_all, feeding) %>% 
+  dplyr::filter(validity_animal_feeding == "Yes")
+feeding_all
+```
+### 19.8.1 Water quality
+
+```{r}
+water <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_water_quality, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+water_all <-  water %>% 
+  dplyr::group_by(validity_water_quality) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+water_all <- rbind(water_all, water) %>% 
+  dplyr::filter(validity_water_quality == "Yes")
+water_all
+```
+### 19.8.1 light cycle
+ 
+```{r}
+light <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_light_cycle, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+light_all <-  light %>% 
+  dplyr::group_by(validity_light_cycle) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+light_all <- rbind(light_all, light) %>% 
+  dplyr::filter(validity_light_cycle == "Yes")
+light_all
+```
+
+
+## 19.9 Exposure duration (CRED Q14)
+
+## 19.9.1 Minimum duration
+
+
+```{r}
+min_duration <- EIPAAB_database %>%
+  dplyr::group_by(compound_min_duration_exposure, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+min_duration_all <-  min_duration %>% 
+  dplyr::group_by(compound_min_duration_exposure) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1))
+  
+
+min_duration_all <- rbind(min_duration_all, min_duration) %>% 
+  dplyr::filter(compound_min_duration_exposure == "Not stated") %>% 
+  dplyr::mutate(percent_reported = 100-percent)
+min_duration_all
+```
+## 19.9.2 Maximum duration
+
+```{r}
+max_duration <- EIPAAB_database %>%
+  dplyr::group_by(compound_max_duration_exposure, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>%
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+max_duration_all <-  max_duration %>% 
+  dplyr::group_by(compound_max_duration_exposure) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1))
+  
+
+max_duration_all <- rbind(max_duration_all, max_duration) %>% 
+  dplyr::filter(compound_max_duration_exposure == "Not stated") %>% 
+  dplyr::mutate(percent_reported = 100-percent)
+max_duration_all
+```
+
+## 19.10 Exposure verification (CRED Q15)
+
+## 19.10.1 Water verification
+
+```{r}
+water_verification <- EIPAAB_database %>%
+  dplyr::filter(!is.na(validity_compound_water_verification)) %>% 
+  dplyr::group_by(validity_compound_water_verification, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+water_verification_all <-  water_verification %>% 
+  dplyr::group_by(validity_compound_water_verification) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+water_verification_all <- rbind(water_verification_all, water_verification) %>% 
+  dplyr::filter(validity_compound_water_verification == "Measured")
+water_verification_all
+```
+## 19.10.1 Tissue verification
+
+```{r}
+tissue_verification <- EIPAAB_database %>%
+  #dplyr::filter(!is.na(validity_compound_animal_verification)) %>% 
+  dplyr::group_by(validity_compound_animal_verification, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+tissue_verification_all <-  tissue_verification %>% 
+  dplyr::group_by(validity_compound_animal_verification) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+tissue_verification_all <- rbind(tissue_verification_all, tissue_verification) %>% 
+  dplyr::filter(validity_compound_animal_verification == "Yes")
+tissue_verification_all
+```
+
+
+## 19.11 Randomization (Not CRED)
+
+```{r}
+randomization <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_randomization, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+randomization_all <-  randomization %>% 
+  dplyr::group_by(validity_randomization) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+randomization_all <- rbind(randomization_all, randomization) %>% 
+  dplyr::filter(validity_randomization == "Yes") %>% 
+  dplyr::mutate(percent_disclosed = 100-percent)
+randomization_all
+```
+
+## 19.12 Blinding (Not CRED)
+
+```{r}
+blinding <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_behav_blinding, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+blinding_all <-  blinding %>% 
+  dplyr::group_by(validity_behav_blinding) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+blinding_all <- rbind(blinding_all, blinding) %>% 
+  dplyr::filter(validity_behav_blinding == "Yes")
+blinding_all
+```
+
+## 19.13 Scoring method (Not CRED)
+
+```{r}
+behav_scoring <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  tidyr::separate_rows(validity_behav_scoring_method, sep = ";") %>% 
+  dplyr::group_by(validity_behav_scoring_method, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+behav_scoring_all <-  behav_scoring %>% 
+  dplyr::group_by(validity_behav_scoring_method) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+behav_scoring_all <- rbind(behav_scoring_all, behav_scoring) %>% 
+  dplyr::filter(validity_behav_scoring_method == "not specified") %>% 
+  dplyr::mutate(percent_specified = 100-percent)
+behav_scoring_all
+```
+
+## 19.14 Conflict statement (Not CRED)
+
+
+```{r}
+conflict <- EIPAAB_database %>%
+  dplyr::group_by(article_id) %>% 
+  dplyr::sample_n(1) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(validity_conflict_statement, study_motivation) %>% 
+  dplyr::reframe(n = n()) %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(total_motivation = sum(n)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(percent = round(n/total_motivation*100,1)) %>% 
+  dplyr::select(-total_motivation)
+
+conflict_all <-  conflict %>% 
+  dplyr::group_by(validity_conflict_statement) %>% 
+  dplyr::reframe(n = sum(n)) %>% 
+  dplyr::mutate(study_motivation = "Overall",
+                percent = round(n/sum(n)*100,1)) 
+  
+
+conflict_all <- rbind(conflict_all, conflict) %>% 
+  dplyr::filter(validity_conflict_statement == "No statement is made in the paper") %>% 
+  dplyr::mutate(percent_specified = 100-percent)
+conflict_all
+```
