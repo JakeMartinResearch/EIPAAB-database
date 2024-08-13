@@ -1,9 +1,33 @@
 ---
 title: "EIPAAB_data_summary"
 author: "Jake Martin"
-date: "2024-04-24"
-output: html_document
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    code_download: true
+    code_folding: hide
+    depth: 4
+    number_sections: no
+    theme:  cosmo # “default”, “cerulean”, “journal”, “flatly”, “darkly”, “readable”, “spacelab”, “united”, “cosmo”, “lumen”, “paper”, “sandstone”, “simplex”, “yeti”
+    toc: yes
+    toc_float: yes
+    toc_depth: 4
+  pdf_document:
+    toc: yes
 ---
+
+```{r setup, include = FALSE}
+#kniter seetting
+knitr::opts_chunk$set(
+message = FALSE,
+warning = FALSE, # no warnings
+cache = TRUE,# Cacheing to save time when kniting
+tidy = TRUE
+)
+
+# clearning up
+#rm(list=ls())
+```
 
 # 1 READ ME
 
@@ -90,7 +114,9 @@ These are the R packages required to run the script. I have added them to a list
 If you want to install and load each package separately, you can use the code install.packages() and require(), I have given a example below.
 
 ```{r}
-required_packages <- c("tidyverse", 
+# this installs and load packages
+# need to install pacman
+pacman::p_load("tidyverse", 
                        "ggraph", 
                        "igraph", 
                        "ggrepel", 
@@ -100,8 +126,23 @@ required_packages <- c("tidyverse",
                        "ape",
                        "gridExtra",
                        "ggdist",
-                       "highcharter"
+                       "highcharter",
+                       "pander"
                        )
+
+# required_packages <- c("tidyverse", 
+#                        "ggraph", 
+#                        "igraph", 
+#                        "ggrepel", 
+#                        "RColorBrewer",
+#                        "ggtree",
+#                        "treeio",
+#                        "ape",
+#                        "gridExtra",
+#                        "ggdist",
+#                        "highcharter",
+#                        "pander"
+#                        )
 
 # Alternatively, you can install an load them one by one
 # install.packages("tidyverse")
@@ -115,22 +156,23 @@ type = 'source' instructs R to download and install the package from its source 
 
 
 ```{r, message=FALSE, results='hide'}
-loaded_packages <- lapply(required_packages, function(package) {
-  if (!require(package, character.only = TRUE)) {
-    install.packages(package, type = 'source') # type = 'source' is optional
-    if (!require(package, character.only = TRUE)) {
-      return(FALSE)
-    }
-  }
-  return(TRUE)
-})
+# loaded_packages <- lapply(required_packages, function(package) {
+#   if (!require(package, character.only = TRUE)) {
+#     install.packages(package, type = 'source') # type = 'source' is optional
+#     if (!require(package, character.only = TRUE)) {
+#       return(FALSE)
+#     }
+#   }
+#   return(TRUE)
+# })
+# 
+# # Check if all packages are loaded successfully
+# if (all(unlist(loaded_packages))) {
+#   cat("All packages loaded\n")
+# } else {
+#   cat("Some packages failed to load or install\n")
+# }
 
-# Check if all packages are loaded successfully
-if (all(unlist(loaded_packages))) {
-  cat("All packages loaded\n")
-} else {
-  cat("Some packages failed to load or install\n")
-}
 ```
 
 For ggtree and treeio you may need to run this code for instillation 
@@ -164,7 +206,7 @@ The first thing we will look at is how many unique (distinct) articles there are
 There are 901 articles, with 1740 rows.
 
 ```{r}
-EIPAAB_database %>% 
+EIPAAB_database %>%  
   dplyr::distinct(article_id) %>% # Returns a list of distinct article_id
   nrow(.) # Returns the length of the current file (which is the list of distinct article_id)
 
@@ -4744,3 +4786,12 @@ conflict_all <- rbind(conflict_all, conflict) %>%
   dplyr::mutate(percent_specified = 100-percent)
 conflict_all
 ```
+
+
+# 19 R Session Informtion
+
+```{r}
+# pander for making it look nicer
+sessionInfo() %>% pander()
+```
+
