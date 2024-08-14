@@ -1050,7 +1050,6 @@ class_use_motivation_fig <- lineage_count_use_motivation %>%
   scale_fill_gradient(name = expression("Relative\nabudance (%)"),
                       low = "#FFFFFF", high = "#231F20") +
   theme_classic() +
- # theme(axis.text.x = element_text(angle = 90, hjust = 1.1, vjust = 0.4)) +
   labs(x = "Study motivation",
        y = "Taxonomic class")
 class_use_motivation_fig
@@ -4033,7 +4032,6 @@ cust_col <- colorRampPalette(c("#FDEDF4", "#F068A7"))(30)
 behav_class_hm <- behav_cat_class_long %>% 
   ggplot(aes(x = behav_cat, y = species_class, fill = count)) +
   geom_tile() +
-  #geom_text(aes(label = ifelse(count == 0, NA, count)), color = "black", size = 3) +
   scale_fill_gradientn(colors = cust_col, na.value = "white", limits = c(1, max(behav_cat_class_long$count, na.rm = TRUE)), guide = "none") +
   theme_bw() +
   facet_wrap(~study_motivation) +
@@ -4117,9 +4115,12 @@ behav_atc_long <- behav_atc_long %>%
                 )
 ```
 
+There are 132 ATC level 3 codes. So the plot below is not going to be very informative. It could be useful if you are only interested in a few ATC groups. 
+
 ```{r}
 behav_atc_long %>% 
-  dplyr::distinct(compound_atc_level_3)
+  dplyr::distinct(compound_atc_level_3) %>% 
+  nrow()
 ```
 
 
@@ -4146,36 +4147,8 @@ behav_atc_hm
 
 ```{r, warning=FALSE}
 setwd(figures_path)
-ggsave("behav_class_hm.pdf", plot = behav_class_hm, width = 8.3, height = 11.7/2)
+ggsave("behav_atc_hm.pdf", plot = behav_atc_hm, width = 8.3, height = 11.7/2)
 ```
-
-
-This one uses relative vaules for each class (e.g. row in the heat map)
-
-```{r}
-cust_col <- colorRampPalette(brewer.pal(4, "Oranges"))(30)
-
-behav_class__rel_hm <- behav_cat_class_long %>% 
-  ggplot(aes(x = behav_cat, y = species_class, fill = rel_percent)) +
-  geom_tile() +
- #geom_text(aes(label = ifelse(rel_percent == 0, NA, rel_percent)), color = "black", size = 3) +
-  scale_fill_gradientn(colors = cust_col, na.value = "white", limits = c(1, max(behav_cat_class_long$count, na.rm = TRUE)), guide = "none") +
-  theme_bw() +
-  facet_wrap(~study_motivation) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(
-    x = "Behaviour",
-    y = "Species Class",
-    fill = "Count"
-  )
-behav_class__rel_hm
-```
-
-```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("behav_class__rel_hm.pdf", plot = behav_class__rel_hm, width = 8.3, height = 11.7/2)
-```
-
 
 
 # 17 Additional biomarkers
