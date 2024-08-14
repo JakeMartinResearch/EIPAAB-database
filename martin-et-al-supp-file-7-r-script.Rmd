@@ -31,6 +31,8 @@ tidy = TRUE
 
 # 1 READ ME
 
+I recommended you read the 'README' files before you work with the EIPAAB database, there are two '"'README.md' and 'README.csv', start with the '.md' file (https://github.com/JakeMartinResearch/EIPAAB-database/blob/main/README.md)
+
 # 2 Welocme
 
 This is the the R markdown script written in R studio (2023.09.0+463 "Desert Sunflower" Release) used to summarise the systematic map database from Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour (EIPAAB): a systematic map and open access database" (doi: XXXXX). 
@@ -58,56 +60,7 @@ All other text outside of the chucks are annotations (like this). Hashtags used 
 
 If you are not familiar with R markdown, here's a guide (https://www.youtube.com/watch?v=tKUufzpoHDE)
 
-# 4 Directories
-
-Creating out input and output directories. They will be made within the current parent directory (i.e. where the R sciprt is saved)
-
-This is code creates a folder and saves the directory as figure_path. This is where we will export our figures
-
-```{r}
-figures_path <- paste0(getwd(), "/figures")
-
-if (!dir.exists(figures_path)) {
-  dir.create(figures_path)
-}
-```
-
-This is code creates a folder and saves the directory as output_path This is where we will export our data
-
-```{r}
-output_path <- paste0(getwd(), "/output-data")
-
-if (!dir.exists(output_path)) {
-  dir.create(output_path)
-}
-```
-
-Input directory 
-
-```{r}
-input_path <- paste0(getwd(), "/input-data")
-
-if (!dir.exists(figures_path)) {
-  dir.create(figures_path)
-}
-```
-
-# 5 Database informartion
-
-The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 96 columns and 1754 rows. The columns represent various forms of metadata extracted from articles that were included in Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour: a systematic map and open access database" (doi: XXXXX).
-
-The READ-ME file which explains what each metadata is, how it was extracted, what structure it has, and at what level it applies, is available at XXX. Below I have imported the read me for accessibility. I highly recommend you read the READ-ME before conducting any of your own meta-analysis to make sure you have interoperated the data correctly.  
-
-More generally, column names that start with 'validity' are metadata relating to study validity, those that start with 'specie's relate to species information (population), those that start with 'compound' relate to the chemical information (exposure), those that start with 'behav' relate to behaviour information (outcome). The order of columns reflects both the level the metadata is extracted at (i.e. article level or species by compound level; see level in READ-ME), as well as the general category of metadata (i.e. validity, species, compound, behaviour).
-
-```{r, warning=FALSE}
-setwd(input_path)
-
-READ_ME <- read.csv("READ-ME.csv", na = "NA") # loading the READ-ME file
-```
-
-
-# 6 Required R packages
+# 4 Required R packages
 
 These are the R packages required to run the script. I have added them to a list so that I can install them all in one go using the function below called loaded_packages. This function I have made will load all the packages in the list below, if the packages are not already installed, this function will first install them.
 
@@ -127,53 +80,11 @@ pacman::p_load("tidyverse",
                        "gridExtra",
                        "ggdist",
                        "highcharter",
-                       "pander"
+                       "pander",
+                        "here"
                        )
-
-# required_packages <- c("tidyverse", 
-#                        "ggraph", 
-#                        "igraph", 
-#                        "ggrepel", 
-#                        "RColorBrewer",
-#                        "ggtree",
-#                        "treeio",
-#                        "ape",
-#                        "gridExtra",
-#                        "ggdist",
-#                        "highcharter",
-#                        "pander"
-#                        )
-
-# Alternatively, you can install an load them one by one
-# install.packages("tidyverse")
-# require("tidyverse")
 ```
 
-
-This is the function to load all packages (and install if necessary) in the list above.
-
-type = 'source' instructs R to download and install the package from its source code rather than from a precompiled binary, this is optional.
-
-
-```{r, message=FALSE, results='hide'}
-# loaded_packages <- lapply(required_packages, function(package) {
-#   if (!require(package, character.only = TRUE)) {
-#     install.packages(package, type = 'source') # type = 'source' is optional
-#     if (!require(package, character.only = TRUE)) {
-#       return(FALSE)
-#     }
-#   }
-#   return(TRUE)
-# })
-# 
-# # Check if all packages are loaded successfully
-# if (all(unlist(loaded_packages))) {
-#   cat("All packages loaded\n")
-# } else {
-#   cat("Some packages failed to load or install\n")
-# }
-
-```
 
 For ggtree and treeio you may need to run this code for instillation 
 
@@ -184,6 +95,53 @@ For ggtree and treeio you may need to run this code for instillation
 # BiocManager::install("ggtree")
 ```
 
+# 5 Directories
+
+Creating out input and output directories. They will be made within the current parent directory (i.e. where the R sciprt is saved)
+
+This is code creates a folder and saves the directory as figure_path. This is where we will export our figures
+
+```{r}
+figures_path <- here("figures")
+
+if (!dir.exists(figures_path)) {
+  dir.create(figures_path)
+}
+```
+
+This is code creates a folder and saves the directory as output_path This is where we will export our data
+
+```{r}
+output_path <- here("output-data")
+
+if (!dir.exists(output_path)) {
+  dir.create(output_path)
+}
+```
+
+Input directory 
+
+```{r}
+input_path <- here("input-data")
+
+if (!dir.exists(figures_path)) {
+  dir.create(figures_path)
+}
+```
+
+# 6 Database informartion
+
+The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 96 columns and 1754 rows. The columns represent various forms of metadata extracted from articles that were included in Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour: a systematic map and open access database" (doi: XXXXX).
+
+The READ-ME file which explains what each metadata is, how it was extracted, what structure it has, and at what level it applies, is available at XXX. Below I have imported the read me for accessibility. I highly recommend you read the READ-ME before conducting any of your own meta-analysis to make sure you have interoperated the data correctly.  
+
+More generally, column names that start with 'validity' are metadata relating to study validity, those that start with 'specie's relate to species information (population), those that start with 'compound' relate to the chemical information (exposure), those that start with 'behav' relate to behaviour information (outcome). The order of columns reflects both the level the metadata is extracted at (i.e. article level or species by compound level; see level in READ-ME), as well as the general category of metadata (i.e. validity, species, compound, behaviour).
+
+```{r, warning=FALSE}
+setwd(input_path)
+
+READ_ME <- read.csv("READ-ME.csv", na = "NA") # loading the READ-ME file
+```
 
 
 # 7 Importing EIPAAB database
