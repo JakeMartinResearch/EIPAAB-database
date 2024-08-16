@@ -8,12 +8,22 @@ output:
     code_folding: hide
     depth: 4
     number_sections: no
-    theme:  cosmo # “default”, “cerulean”, “journal”, “flatly”, “darkly”, “readable”, “spacelab”, “united”, “cosmo”, “lumen”, “paper”, “sandstone”, “simplex”, “yeti”
+    theme:  cosmo
     toc: yes
     toc_float: yes
     toc_depth: 4
   pdf_document:
     toc: yes
+knit: |
+  (function(input, ...) {
+    rmarkdown::render(
+      input,
+      output_file = paste0(
+       'index.html'
+      ),
+      envir = globalenv()
+    )
+  })
 ---
 
 ```{r setup, include = FALSE}
