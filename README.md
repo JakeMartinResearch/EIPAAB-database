@@ -13,9 +13,9 @@ The R script is designed to act as a starting point for anyone who wishes to use
 In breif, to create the database we systematically searched two electronic databases (Web of Science and Scopus) and supplemented these with additional article sources. The search string followed a Population–Exposure–Comparison–Outcome (PECO) framework to capture articles that used an aquatic organism (population) to test the effects of a pharmaceutical (exposure) on behaviour (outcome). Eligible articles also needed a control group (comparison). Articles were screened in two stages: an initial screening of title and abstract, followed by full-text screening alongside data extraction. Decision trees were designed a priori to appraise eligibility at both stages. Information on study validity was collected but not used as a basis for inclusion.
 
 ## EIPAAB database structure
-The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 96 columns and 1754 rows. The columns represent various forms of metadata extracted from articles as dsiribed in Martin et al 2024.
+The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 111 columns and 1754 rows. The columns represent various forms of metadata extracted from articles as dsiribed in Martin et al 2024.
 
-The READ-ME.csv file explains what each metadata is, how it was extracted, what structure it has, and at what level it applies. I highly recommend you read the READ-ME.csv before conducting any of your own meta-anaylsis to make sure you have interoperated the data correctly.  
+The READ-ME.csv file (/input-data/READ-ME.csv) explains what each column is, how it was extracted, what structure it has, and at what level it applies. I highly recommend you read the READ-ME.csv before conducting any of your own meta-anaylsis to make sure you have interoperated the data correctly.
 
 More generally, column names that start with 'validity' are metadata relating to study validity, those that start with 'specie's relate to species information (population), those that start with 'compound' relate to the chemical information (exposure), those that start with 'behav' relate to behaviour information (outcome). The order of columns reflects both the level the metadata is extracted at (i.e. article level or species by compound level; see level in READ-ME), as well as the general category of metadata (i.e. validity, species, compound, behaviour).
 
@@ -23,6 +23,7 @@ More generally, column names that start with 'validity' are metadata relating to
 This script was authored by Jake M Martin (jakemartin.org)
 
 Contact: jake.martin@deakin.edu or jake.martin@slu.se
+Website: jake.martin.org
 
 ## Affiliations
 1. Department of Wildlife, Fish and Environmental Studies, Swedish University of Agricultural Sciences, Umeå, Sweden
