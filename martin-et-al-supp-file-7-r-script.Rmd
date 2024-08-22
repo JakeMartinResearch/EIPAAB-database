@@ -313,9 +313,9 @@ pub_year_fig
 Saving the figure as a PDF
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-#ggsave("pub_year_fig.png", plot = pub_year_fig, width = 10, height = 5, dpi = 300) #if you want to save a png
-ggsave("study_pub_year_fig.pdf", plot = pub_year_fig, width = 10, height = 5)
+# setwd(figures_path)
+# ggsave("pub_year_fig.png", plot = pub_year_fig, width = 10, height = 5, dpi = 300) #if you want to save a png
+# ggsave("study_pub_year_fig.pdf", plot = pub_year_fig, width = 10, height = 5)
 ```
 
 ## 10.2 Cumulative and relative growth
@@ -364,8 +364,8 @@ cumulative_articles_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("study_cumulative_articles_fig.pdf", plot = cumulative_articles_fig, width = 10, height = 5)
+# setwd(figures_path)
+# ggsave("study_cumulative_articles_fig.pdf", plot = cumulative_articles_fig, width = 10, height = 5)
 ```
 
 ## 10.3 Reltive growth
@@ -487,8 +487,8 @@ relative_growth_env_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("study_relative_growth_env_fig.pdf", plot = relative_growth_env_fig, width = 5, height = 5)
+# setwd(figures_path)
+# ggsave("study_relative_growth_env_fig.pdf", plot = relative_growth_env_fig, width = 5, height = 5)
 ```
 
 
@@ -533,8 +533,8 @@ relative_growth_med_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("study_relative_growth_med_fig.pdf", plot = relative_growth_med_fig, width = 5, height = 5)
+# setwd(figures_path)
+# ggsave("study_relative_growth_med_fig.pdf", plot = relative_growth_med_fig, width = 5, height = 5)
 ```
 
 
@@ -579,8 +579,8 @@ relative_growth_base_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("study_relative_growth_base_fig.pdf", plot = relative_growth_base_fig, width = 5, height = 5)
+# setwd(figures_path)
+# ggsave("study_relative_growth_base_fig.pdf", plot = relative_growth_base_fig, width = 5, height = 5)
 ```
 
 # 11 Population, Exposure and Outcome
@@ -745,8 +745,8 @@ spp_cladogram
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_cladogram.pdf", plot = spp_cladogram, width = 8, height = 5)
+# setwd(figures_path)
+# ggsave("spp_cladogram.pdf", plot = spp_cladogram, width = 8, height = 5)
 ```
 
 
@@ -819,8 +819,8 @@ class_n_spp_fig
 Save the figure
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_class_n_spp_fig.pdf", plot = class_n_spp_fig, width = 5, height = 5)
+# setwd(figures_path)
+# ggsave("spp_class_n_spp_fig.pdf", plot = class_n_spp_fig, width = 5, height = 5)
 ```
 
 ### 12.2.3 Phylum level
@@ -878,8 +878,8 @@ phylum_ring_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_phylum_ring_fig.pdf", plot = phylum_ring_fig, width = 5, height = 5)
+# setwd(figures_path)
+# ggsave("spp_phylum_ring_fig.pdf", plot = phylum_ring_fig, width = 5, height = 5)
 ```
 
 
@@ -962,8 +962,8 @@ class_use_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_class_use_fig.pdf", plot = class_use_fig, width = 5, height = 5)
+# setwd(figures_path)
+# ggsave("spp_class_use_fig.pdf", plot = class_use_fig, width = 5, height = 5)
 ```
 
 
@@ -1014,8 +1014,8 @@ phylum_use_ring_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_phylum_use_ring_fig.pdf", plot = phylum_use_ring_fig, width = 5, height = 5)
+# setwd(figures_path)
+# ggsave("spp_phylum_use_ring_fig.pdf", plot = phylum_use_ring_fig, width = 5, height = 5)
 ```
 
 ### 12.3.2 Taxa representation by study motivation
@@ -1072,8 +1072,8 @@ class_use_motivation_fig
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_class_use_motivation_fig.pdf", plot = class_use_motivation_fig, width = 5, height = 5)
+# setwd(figures_path)
+# ggsave("spp_class_use_motivation_fig.pdf", plot = class_use_motivation_fig, width = 5, height = 5)
 ```
 
 
@@ -1165,8 +1165,8 @@ n_spp_fig
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_n_spp_fig.pdf", plot = n_spp_fig, width = 5, height = 5)
+# setwd(figures_path)
+# ggsave("spp_n_spp_fig.pdf", plot = n_spp_fig, width = 5, height = 5)
 ```
 
 Making a list of the most common 15 species
@@ -1231,8 +1231,8 @@ top_15_spp_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_top_15_spp_fig.pdf", plot = top_15_spp_fig, width = 5, height = 10)
+# setwd(figures_path)
+# ggsave("spp_top_15_spp_fig.pdf", plot = top_15_spp_fig, width = 5, height = 10)
 ```
 
 
@@ -1447,8 +1447,8 @@ habitat_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_habitat_fig.pdf", plot = habitat_fig, width = 10, height = 5)
+# setwd(figures_path)
+# ggsave("spp_habitat_fig.pdf", plot = habitat_fig, width = 10, height = 5)
 ```
 
 We should also consider how many records did not inculde IUCN reports and thus habitat.
@@ -1510,8 +1510,8 @@ habitat_info_fig
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_habitat_info_fig.pdf", plot = habitat_info_fig, width = 5, height = 10)
+# setwd(figures_path)
+# ggsave("spp_habitat_info_fig.pdf", plot = habitat_info_fig, width = 5, height = 10)
 ```
 
 
@@ -1602,8 +1602,8 @@ life_stage_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_life_stage_fig.pdf", plot = life_stage_fig, width = 10, height = 5)
+# setwd(figures_path)
+# ggsave("spp_life_stage_fig.pdf", plot = life_stage_fig, width = 10, height = 5)
 ```
 
 Let's also look at how many where unknown or not described
@@ -1655,8 +1655,8 @@ stage_info_fig
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_stage_info_fig.pdf", plot = stage_info_fig, width = 2.5, height = 5)
+# setwd(figures_path)
+# ggsave("spp_stage_info_fig.pdf", plot = stage_info_fig, width = 2.5, height = 5)
 ```
 
 ## 12.6 Species sex 
@@ -1752,8 +1752,8 @@ sex_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_sex_fig.pdf", plot = sex_fig, width = 10, height = 5)
+# setwd(figures_path)
+# ggsave("spp_sex_fig.pdf", plot = sex_fig, width = 10, height = 5)
 ```
 
 Now let's look at those not assgined to a sex
@@ -1806,8 +1806,8 @@ sex_info_fig
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_sex_info_fig.pdf", plot = sex_info_fig, width = 2.5, height = 5)
+# setwd(figures_path)
+# ggsave("spp_sex_info_fig.pdf", plot = sex_info_fig, width = 2.5, height = 5)
 ```
 
 ## 12.7 Species source
@@ -1903,8 +1903,8 @@ source_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_source_fig.pdf", plot = source_fig, width = 10, height = 5)
+# setwd(figures_path)
+# ggsave("spp_source_fig.pdf", plot = source_fig, width = 10, height = 5)
 ```
 
 Now let's look at those not assigned a source
@@ -1956,8 +1956,8 @@ source_info_fig
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("spp_source_info_fig.pdf", plot = source_info_fig, width = 5, height = 10)
+# setwd(figures_path)
+# ggsave("spp_source_info_fig.pdf", plot = source_info_fig, width = 5, height = 10)
 ```
 
 
@@ -2051,8 +2051,8 @@ compound_n_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("comp_compound_n_fig.pdf", plot = compound_n_fig, width = 10, height = 5)
+# setwd(figures_path)
+# ggsave("comp_compound_n_fig.pdf", plot = compound_n_fig, width = 10, height = 5)
 ```
 
 ## 13.2 Therputic diversity in the database
@@ -2167,8 +2167,8 @@ atc_level_1_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("comp_atc_level_1_fig.pdf", plot = atc_level_1_fig, width = 10, height = 10)
+# setwd(figures_path)
+# ggsave("comp_atc_level_1_fig.pdf", plot = atc_level_1_fig, width = 10, height = 10)
 ```
 
 ### 13.2.2 ATC level 3
@@ -2281,8 +2281,8 @@ atc_level_3_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("atc_level_3_fig.pdf", plot = atc_level_3_fig, width = 10, height = 5)
+# setwd(figures_path)
+# ggsave("atc_level_3_fig.pdf", plot = atc_level_3_fig, width = 10, height = 5)
 ```
 
 
@@ -2419,11 +2419,11 @@ top_10_comp_base_fig
 Saving as PDFs
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("comp_top_10_comp_all_fig.pdf", plot = top_10_comp_all_fig, width = 5, height = 10)
-ggsave("comp_top_10_comp_env_fig.pdf", plot = top_10_comp_env_fig, width = 5, height = 10)
-ggsave("comp_top_10_comp_med_fig.pdf", plot = top_10_comp_med_fig, width = 5, height = 10)
-ggsave("comp_top_10_comp_base_fig.pdf", plot = top_10_comp_base_fig, width = 5, height = 10)
+# setwd(figures_path)
+# ggsave("comp_top_10_comp_all_fig.pdf", plot = top_10_comp_all_fig, width = 5, height = 10)
+# ggsave("comp_top_10_comp_env_fig.pdf", plot = top_10_comp_env_fig, width = 5, height = 10)
+# ggsave("comp_top_10_comp_med_fig.pdf", plot = top_10_comp_med_fig, width = 5, height = 10)
+# ggsave("comp_top_10_comp_base_fig.pdf", plot = top_10_comp_base_fig, width = 5, height = 10)
 ```
 
 
@@ -2620,11 +2620,11 @@ exp_duration_base_fig
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("comp_exp_duration_all_fig.pdf", plot = exp_duration_all_fig, width = 8.3/3, height = 11.7/3)
-ggsave("comp_exp_duration_env_fig.pdf", plot = exp_duration_env_fig, width = 8.3/3, height = 11.7/3)
-ggsave("comp_exp_duration_med_fig.pdf", plot = exp_duration_med_fig, width = 8.3/3, height = 11.7/3)
-ggsave("comp_exp_duration_base_fig.pdf", plot = exp_duration_base_fig, width = 8.3/3, height = 11.7/3)
+# setwd(figures_path)
+# ggsave("comp_exp_duration_all_fig.pdf", plot = exp_duration_all_fig, width = 8.3/3, height = 11.7/3)
+# ggsave("comp_exp_duration_env_fig.pdf", plot = exp_duration_env_fig, width = 8.3/3, height = 11.7/3)
+# ggsave("comp_exp_duration_med_fig.pdf", plot = exp_duration_med_fig, width = 8.3/3, height = 11.7/3)
+# ggsave("comp_exp_duration_base_fig.pdf", plot = exp_duration_base_fig, width = 8.3/3, height = 11.7/3)
 ```
 
 ## 13.8 Number of doses
@@ -2701,8 +2701,8 @@ doses_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("comp_doses_fig.pdf", plot = doses_fig, width = 8.3, height = 11.7/3)
+# setwd(figures_path)
+# ggsave("comp_doses_fig.pdf", plot = doses_fig, width = 8.3, height = 11.7/3)
 ```
 
 
@@ -2775,8 +2775,8 @@ min_conc_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("comp_min_conc_fig.pdf", plot = min_conc_fig, width = 5, height = 6)
+# setwd(figures_path)
+# ggsave("comp_min_conc_fig.pdf", plot = min_conc_fig, width = 5, height = 6)
 ```
 
 A summary table so we can see what the corresponding raw values are in the plot
@@ -2826,8 +2826,8 @@ max_conc_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("comp_max_conc_fig.pdf", plot = max_conc_fig, width = 5, height = 6)
+# setwd(figures_path)
+# ggsave("comp_max_conc_fig.pdf", plot = max_conc_fig, width = 5, height = 6)
 ```
 
 A summary table so we can see what the corresponding raw values are in the plot
@@ -2877,8 +2877,8 @@ range_conc_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("comp_range_conc_fig.pdf", plot = range_conc_fig, width = 5, height = 6)
+# setwd(figures_path)
+# ggsave("comp_range_conc_fig.pdf", plot = range_conc_fig, width = 5, height = 6)
 ```
 
 
@@ -3070,8 +3070,8 @@ behav_motivation_fig
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("behav_motivation_fig.pdf", plot = behav_motivation_fig, width = 10, height = 5)
+# setwd(figures_path)
+# ggsave("behav_motivation_fig.pdf", plot = behav_motivation_fig, width = 10, height = 5)
 ```
 
 ## 14.2 Behaviour sub-categories
@@ -3165,12 +3165,12 @@ beh_movement_subcat_fig
 
 
 ```{r, warning=FALSE}
-n_subcat <- movement_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_movement_subcat_fig.pdf", plot = beh_movement_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- movement_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_movement_subcat_fig.pdf", plot = beh_movement_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 If you would like to make a doughnut chart here's the code. However, for categories that have 5 or more sub-categories like movement I don't think this is the clearest way to present the data.
@@ -3238,12 +3238,12 @@ beh_boldness_subcat_fig
 
 
 ```{r, warning=FALSE}
-n_subcat <- boldness_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_boldness_subcat_fig.pdf", plot = beh_boldness_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- boldness_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_boldness_subcat_fig.pdf", plot = beh_boldness_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 
@@ -3288,12 +3288,12 @@ beh_foraging_subcat_fig
 ```
 
 ```{r, warning=FALSE}
-n_subcat <- foraging_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_foraging_subcat_fig.pdf", plot = beh_foraging_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- foraging_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_foraging_subcat_fig.pdf", plot = beh_foraging_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 
@@ -3338,12 +3338,12 @@ beh_antipredator_subcat_fig
 ```
 
 ```{r, warning=FALSE}
-n_subcat <- antipredator_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_antipredator_subcat_fig.pdf", plot = beh_antipredator_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- antipredator_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_antipredator_subcat_fig.pdf", plot = beh_antipredator_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 
@@ -3391,12 +3391,12 @@ beh_mating_subcat_fig
 
 
 ```{r, warning=FALSE}
-n_subcat <- mating_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_mating_subcat_fig.pdf", plot = beh_mating_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- mating_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_mating_subcat_fig.pdf", plot = beh_mating_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 
@@ -3442,12 +3442,12 @@ beh_post_mating_subcat_fig
 
 
 ```{r, warning=FALSE}
-n_subcat <- post_mating_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_post_mating_subcat_fig.pdf", plot = beh_post_mating_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- post_mating_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_post_mating_subcat_fig.pdf", plot = beh_post_mating_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 
@@ -3493,12 +3493,12 @@ beh_agression_subcat_fig
 
 
 ```{r, warning=FALSE}
-n_subcat <- agression_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_agression_subcat_fig.pdf", plot = beh_agression_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- agression_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_agression_subcat_fig.pdf", plot = beh_agression_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 
@@ -3544,12 +3544,12 @@ beh_sociality_subcat_fig
 
 
 ```{r, warning=FALSE}
-n_subcat <- sociality_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_sociality_subcat_fig.pdf", plot = beh_sociality_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- sociality_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_sociality_subcat_fig.pdf", plot = beh_sociality_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 
@@ -3595,12 +3595,12 @@ beh_cognition_subcat_fig
 
 
 ```{r, warning=FALSE}
-n_subcat <- cognition_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_cognition_subcat_fig.pdf", plot = beh_cognition_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- cognition_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_cognition_subcat_fig.pdf", plot = beh_cognition_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 ### 14.2.10 Non-categories plots 
@@ -3645,12 +3645,12 @@ beh_noncat_subcat_fig
 
 
 ```{r, warning=FALSE}
-n_subcat <- noncat_subcat %>% 
-  dplyr::distinct(sub_category) %>% 
-  nrow(.)/10
-
-setwd(figures_path)
-ggsave("beh_noncat_subcat_fig.pdf", plot = beh_noncat_subcat_fig, width = 10, height = 11.7*n_subcat)
+# n_subcat <- noncat_subcat %>% 
+#   dplyr::distinct(sub_category) %>% 
+#   nrow(.)/10
+# 
+# setwd(figures_path)
+# ggsave("beh_noncat_subcat_fig.pdf", plot = beh_noncat_subcat_fig, width = 10, height = 11.7*n_subcat)
 ```
 
 
@@ -3825,15 +3825,15 @@ PICO_atc_class_sankey
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-htmlwidgets::saveWidget(widget = PICO_atc_class_sankey, file = "PICO_atc_class_sankey.html")
+# setwd(figures_path)
+# htmlwidgets::saveWidget(widget = PICO_atc_class_sankey, file = "PICO_atc_class_sankey.html")
 ```
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-# Make a webshot in pdf : high quality but can not choose printed zone
-webshot::webshot("PICO_atc_class_sankey.html" , "PICO_atc_class_sankey.pdf", delay = 10)
+# setwd(figures_path)
+# # Make a webshot in pdf : high quality but can not choose printed zone
+# webshot::webshot("PICO_atc_class_sankey.html" , "PICO_atc_class_sankey.pdf", delay = 10)
 ```
 
 
@@ -3891,15 +3891,15 @@ PICO_fluoxetine_sankey
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-htmlwidgets::saveWidget(widget = PICO_fluoxetine_sankey, file = "PICO_fluoxetine_sankey.html")
+# setwd(figures_path)
+# htmlwidgets::saveWidget(widget = PICO_fluoxetine_sankey, file = "PICO_fluoxetine_sankey.html")
 ```
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-# Make a webshot in pdf : high quality but can not choose printed zone
-webshot::webshot("PICO_fluoxetine_sankey.html" , "PICO_fluoxetine_sankey.pdf", delay = 10)
+# setwd(figures_path)
+# # Make a webshot in pdf : high quality but can not choose printed zone
+# webshot::webshot("PICO_fluoxetine_sankey.html" , "PICO_fluoxetine_sankey.pdf", delay = 10)
 ```
 
 
@@ -3938,15 +3938,15 @@ PICO_diazepam_sankey
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-htmlwidgets::saveWidget(widget = PICO_diazepam_sankey, file = "PICO_diazepam_sankey.html")
+# setwd(figures_path)
+# htmlwidgets::saveWidget(widget = PICO_diazepam_sankey, file = "PICO_diazepam_sankey.html")
 ```
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
+# setwd(figures_path)
 # Make a webshot in pdf : high quality but can not choose printed zone
-webshot::webshot("PICO_diazepam_sankey.html" , "PICO_diazepam_sankey.pdf", delay = 10)
+# webshot::webshot("PICO_diazepam_sankey.html" , "PICO_diazepam_sankey.pdf", delay = 10)
 ```
 
 
@@ -3985,15 +3985,15 @@ PICO_EE2_sankey
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-htmlwidgets::saveWidget(widget = PICO_EE2_sankey, file = "PICO_EE2_sankey.html")
+# setwd(figures_path)
+# htmlwidgets::saveWidget(widget = PICO_EE2_sankey, file = "PICO_EE2_sankey.html")
 ```
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-# Make a webshot in pdf : high quality but can not choose printed zone
-webshot::webshot("PICO_EE2_sankey.html" , "PICO_EE2_sankey.pdf", delay = 10)
+# setwd(figures_path)
+# #Make a webshot in pdf : high quality but can not choose printed zone
+# webshot::webshot("PICO_EE2_sankey.html" , "PICO_EE2_sankey.pdf", delay = 10)
 ```
 
 # 16 Knowledge clusters and gaps
@@ -4058,8 +4058,8 @@ behav_class_hm
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("behav_class_hm.pdf", plot = behav_class_hm, width = 8.3, height = 11.7/2)
+# setwd(figures_path)
+# ggsave("behav_class_hm.pdf", plot = behav_class_hm, width = 8.3, height = 11.7/2)
 ```
 
 
@@ -4085,8 +4085,8 @@ behav_class_rel_hm
 ```
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("behav_class_rel_hm.pdf", plot = behav_class_rel_hm, width = 8.3, height = 11.7/2)
+# setwd(figures_path)
+# ggsave("behav_class_rel_hm.pdf", plot = behav_class_rel_hm, width = 8.3, height = 11.7/2)
 ```
 
 
@@ -4158,8 +4158,8 @@ behav_atc_hm
 
 
 ```{r, warning=FALSE}
-setwd(figures_path)
-ggsave("behav_atc_hm.pdf", plot = behav_atc_hm, width = 8.3, height = 11.7/2)
+# setwd(figures_path)
+# ggsave("behav_atc_hm.pdf", plot = behav_atc_hm, width = 8.3, height = 11.7/2)
 ```
 
 
