@@ -43,7 +43,7 @@ tidy = TRUE
 
 I recommended you read the 'README' files before you work with the EIPAAB database, there are two '"'README.md' and 'README.csv', start with the '.md' file (https://github.com/JakeMartinResearch/EIPAAB-database/blob/main/README.md)
 
-# 2 Welocme
+# 2 Welcome
 
 This is the the R markdown script written in R studio (2023.09.0+463 "Desert Sunflower" Release) used to summarise the systematic map database from Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour (EIPAAB): a systematic map and open access database" (doi: XXXXX). 
 
@@ -110,6 +110,7 @@ For ggtree and treeio you may need to run this code for instillation
 Creating out input and output directories. They will be made within the current parent directory (i.e. where the R sciprt is saved)
 
 This is code creates a folder and saves the directory as figure_path. This is where we will export our figures
+
 
 ```{r}
 figures_path <- here("figures")
