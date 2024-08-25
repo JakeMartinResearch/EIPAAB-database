@@ -139,7 +139,7 @@ if (!dir.exists(figures_path)) {
 
 # 6 Database informartion
 
-The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 111 columns and 1754 rows. The columns represent various forms of metadata extracted from articles that were included in Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour: a systematic map and open access database" (doi: XXXXX).
+The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 111 columns and 1754 rows. The columns represent various forms of metadata extracted from articles that were included in Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour: a systematic map and open access database" (doi: <to be added>).
 
 The READ-ME.csv file which explains what each metadata is, how it was extracted, what structure it has, and at what level it applies, is available at on GitHub (https://github.com/JakeMartinResearch/EIPAAB-database/tree/main/input-data) or on the OSF (10.17605/OSF.IO/ATWY6) Below I have imported the read me for accessibility. I highly recommend you read the READ-ME before conducting any of your own meta-analysis to make sure you have interoperated the data correctly.  
 
@@ -177,16 +177,21 @@ EIPAAB_database <- read.csv("EIPAAB-database.csv", na = "NA")
 
 The first thing we will look at is how many unique (distinct) articles there are in the database, and how many rows of data there are.
 
-There are 901 articles, with 1740 rows.
+There are 901 articles
 
 ```{r}
 EIPAAB_database %>%  
   dplyr::distinct(article_id) %>% # Returns a list of distinct article_id
   nrow(.) # Returns the length of the current file (which is the list of distinct article_id)
+```
 
+There are 1739 rows of data
+
+```{r}
 EIPAAB_database %>% 
   nrow(.) # Returns the length of the current file (which is the length of the whole datafile)
 ```
+
 
 Each row represent a unique species by compound combination within a given article. This is represented by the column unique_row_id This is a combination of the extractors response id, specie,s and compound. For example, R_0Bqz2RQ4JxPfBkZ_Danio_rerio_Diazepam, response id = R_0Bqz2RQ4JxPfBkZ, species = Danio rerio, and compound = Diazepam
 
