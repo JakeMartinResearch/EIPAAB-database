@@ -13,7 +13,7 @@ The R script is designed to act as a starting point for anyone who wishes to use
 In breif, to create the database we systematically searched two electronic databases (Web of Science and Scopus) and supplemented these with additional article sources. The search string followed a Population–Exposure–Comparison–Outcome (PECO) framework to capture articles that used an aquatic organism (population) to test the effects of a pharmaceutical (exposure) on behaviour (outcome). Eligible articles also needed a control group (comparison). Articles were screened in two stages: an initial screening of title and abstract, followed by full-text screening alongside data extraction. Decision trees were designed a priori to appraise eligibility at both stages. Information on study validity was collected but not used as a basis for inclusion.
 
 ## EIPAAB database structure
-The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 111 columns and 1740 rows. The columns represent various forms of metadata extracted from articles as dsiribed in Martin et al 2024.
+The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 113 columns and 1739 rows. The columns represent various forms of metadata extracted from articles as dsiribed in Martin et al 2024.
 
 The READ-ME.csv file (/input-data/READ-ME.csv) explains what each column is, how it was extracted, what structure it has, and at what level it applies. I highly recommend you read the READ-ME.csv before conducting any of your own meta-anaylsis to make sure you have interoperated the data correctly.
 
