@@ -1542,7 +1542,9 @@ EIPAAB_database %>%
 ```
 
 
-Let's take a look at spp life stages used in the EIPAAB databasebased on study motivation
+Let's take a look at spp life stages used in the EIPAAB database on study motivation
+
+First those that didn't report it
 
 ```{r}
 stage_summary_all <- EIPAAB_database %>% 
@@ -1556,49 +1558,57 @@ stage_summary_all <- EIPAAB_database %>%
   dplyr::group_by(species_stage, study_motivation) %>% 
   dplyr::reframe(n_total = sum(n)) %>%  # now a sum for each habitat
   dplyr::group_by(study_motivation) %>% 
-  dplyr::mutate(n_motivation = sum(n_total)) %>% 
+  dplyr::mutate(n_motivation = sum(n_total),
+                percent = round(n_total/n_motivation*100,1)) %>% 
   dplyr::ungroup()
 
-stage_summary_all
+stage_summary_all %>%
+  dplyr::filter(species_stage == "Unknown or not specified") %>% 
+  dplyr::mutate(percent_reported = 100-percent) %>% 
+  dplyr::rename(percent_not_report = percent)
 ```
+
+```{r}
+stage_order <- c("Adult", "Juvenile", "Larvae", "Egg or embryo")
+
+stage_summary_reported <- stage_summary_all %>% 
+  dplyr::filter(species_stage != "Unknown or not specified") %>% 
+  dplyr::group_by(study_motivation) %>% 
+  dplyr::mutate(n_motivation = sum(n_total),
+                percent = round(n_total/n_motivation*100,1),
+                species_stage = factor(species_stage, levels = stage_order)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(species_stage) 
+
+stage_summary_reported
+```
+
 
 For life stages that are described, what is the breakdown 
 
 ```{r, fig.width=5, fig.height=2.5}
-stage_order <- c("Adult", "Juvenile", "Larvae", "Egg or embryo")
-
 # Define the black and grey color theme
 color_theme <- c("#A14323", "#D86C2F", "#EE9E5A", "#F3E9A5")
 
-# Making proportion for those that did report 
-stage_summary_described <- stage_summary_all %>%
-  dplyr::filter(species_stage %in% stage_order) %>% 
-  dplyr::group_by(study_motivation) %>% 
-  dplyr::mutate(n_motivation = sum(n_total)) %>%
-  dplyr::ungroup() %>% 
-  dplyr::mutate(prop = n_total/n_motivation)
-    
-
 
 # Calculate cumulative positions for text labels
-stage_summary_described <- stage_summary_described %>%
-  dplyr::mutate(species_stage = factor(species_stage, levels = stage_order)) %>% 
+stage_summary_reported <- stage_summary_reported %>%
   dplyr::group_by(study_motivation) %>%
   dplyr::arrange(desc(species_stage)) %>% 
-  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 4)
+  dplyr::mutate(cumulative_percent = cumsum(percent) - percent / 4)
 
 # Create the plot
-life_stage_fig <- stage_summary_described %>%
+life_stage_fig <- stage_summary_reported %>%
   mutate(study_motivation = fct_relevel(study_motivation, "Basic research", "Medical", "Environmental")) %>%
-  ggplot(aes(y = prop, x = study_motivation, fill = species_stage, group = species_stage)) +
+  ggplot(aes(y = percent, x = study_motivation, fill = species_stage, group = species_stage)) +
   geom_bar(stat = "identity", width = 0.9) +
-  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white", size = 3) + 
+  geom_text(aes(label = percent, y = cumulative_percent), color = "white", size = 3) + 
  scale_fill_manual(values = color_theme, name = "Life stage") + 
   theme_classic() +
   theme(legend.position = "right") +
   labs(
     x = "Study motivation",
-    y = "Proportion of all species assigned to a life stage"
+    y = "Percent of all species assigned to a life stage"
   ) +
   coord_flip()
 
@@ -1611,7 +1621,7 @@ life_stage_fig
 # ggsave("spp_life_stage_fig.pdf", plot = life_stage_fig, width = 10, height = 5)
 ```
 
-Let's also look at how many where unknown or not described
+Let's also look at how many where unknown or not described overall
 
 ```{r}
 stage_summary_info  <- stage_summary_all %>% 
@@ -1720,7 +1730,9 @@ sex_male_female <-  sex_summary_all %>%
   dplyr::group_by(study_motivation) %>% 
   dplyr::mutate(total_male_female = sum(n_articles)) %>% 
   dplyr::ungroup() %>% 
-  dplyr::mutate(prop = n_articles/total_male_female)
+  dplyr::mutate(percent = round(n_articles/total_male_female*100,1))
+
+sex_male_female
 ```
 
 Making the plot
@@ -1735,20 +1747,20 @@ sex_male_female <- sex_male_female %>%
   dplyr::mutate(species_sex = factor(species_sex, levels = sex_order)) %>% 
   dplyr::group_by(study_motivation) %>%
   dplyr::arrange(desc(species_sex)) %>% 
-  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 2)
+  dplyr::mutate(cumulative_percent = cumsum(percent) - percent / 2)
 
 # Create the plot
 sex_fig <- sex_male_female %>%
   mutate(study_motivation = fct_relevel(study_motivation, "Basic research", "Medical", "Environmental")) %>% 
-  ggplot(aes(y = prop, x = study_motivation, fill = species_sex, group = species_sex)) +
+  ggplot(aes(y = percent, x = study_motivation, fill = species_sex, group = species_sex)) +
   geom_bar(stat = "identity", width = 0.9) +
-  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white", size = 3) + 
+  geom_text(aes(label = round(percent, 2), y = cumulative_percent), color = "white", size = 3) + 
   scale_fill_manual(values = color_theme, name = "Sex") + 
   theme_classic() +
   theme(legend.position = "right") +
   labs(
     x = "Study motivation",
-    y = "Proportion of all species assigned to female or male"
+    y = "Percentage of all species assigned to female or male"
   ) +
   coord_flip()
 
@@ -1859,18 +1871,27 @@ source_summary_all <- EIPAAB_database %>%
   dplyr::group_by(study_motivation) %>% 
   dplyr::mutate(total_source = sum(n_articles)) %>% 
   dplyr::ungroup() %>% 
-  dplyr::mutate(overall_prop = n_articles/total_source)
+  dplyr::mutate(overall_percent = round(n_articles/total_source*100,1))
+
 source_summary_all
 ```
 
+Only those with reported source 
+
 ```{r}
+source_order <- c("Wild collected", "Lab stock from wild population", "Lab stock of undisclosed origin", 
+                  "Lab stock from commercial supplier", "Commercial supplier or fish farm")
+
 source_summary <- source_summary_all %>% 
   dplyr::filter(species_source != "Not reported") %>% 
   dplyr::select(species_source, study_motivation, n_articles) %>% 
   dplyr::group_by(study_motivation) %>% 
   dplyr::mutate(total_reported = sum(n_articles)) %>% 
   dplyr::ungroup() %>% 
-  dplyr::mutate(prop = n_articles/total_reported)
+  dplyr::mutate(percent = round(n_articles/total_reported*100,1),
+                species_source = factor(species_source, levels = source_order)) %>% 
+  dplyr::arrange(species_source)
+
 source_summary
 ```
 
@@ -1883,17 +1904,16 @@ color_theme <- c("#607C3B", "#A7D271", "#6B6E70", "#A66EAF", "#61346B")
 
 # Calculate cumulative positions for text labels
 source_summary <- source_summary %>%
-  dplyr::mutate(species_source = factor(species_source, levels = source_order)) %>% 
   dplyr::group_by(study_motivation) %>%
   dplyr::arrange(desc(species_source)) %>% 
-  dplyr::mutate(cumulative_prop = cumsum(prop) - prop / 5)
+  dplyr::mutate(cumulative_percent = cumsum(percent) - percent / 5)
 
 # Create the plot
 source_fig <- source_summary %>%
   mutate(study_motivation = fct_relevel(study_motivation, "Basic research", "Medical", "Environmental")) %>% 
-  ggplot(aes(y = prop, x = study_motivation, fill = species_source, group = species_source)) +
+  ggplot(aes(y = percent, x = study_motivation, fill = species_source, group = species_source)) +
   geom_bar(stat = "identity", width = 0.9) +
-  geom_text(aes(label = round(prop, 2), y = cumulative_prop), color = "white", size = 3) + 
+  geom_text(aes(label = round(percent, 2), y = cumulative_percent), color = "white", size = 3) + 
  scale_fill_manual(values = color_theme, name = "Life stage") + 
   theme_classic() +
   theme(legend.position = "right") +
