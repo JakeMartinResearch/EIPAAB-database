@@ -413,7 +413,7 @@ First we will import the research field annual number of articles database I cre
 ```{r, warning=FALSE}
 setwd(input_path)
 
-wos_research_areas_n <- read.csv("martin-et-al-supp-file-9-wos-research-areas-1992-2022.csv") %>% 
+wos_research_areas_n <- read.csv("martin-et-al-supp-file-8-wos-research-areas-1992-2022.csv") %>% 
   dplyr::arrange(year) %>%
   dplyr::group_by(research_area) %>%
   dplyr::mutate(
