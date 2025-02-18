@@ -26,6 +26,10 @@ knit: |
   })
 ---
 
+<!------------------------------->
+# ⚙️ Knit settings 
+<!------------------------------->
+
 ```{r setup, include = FALSE}
 #kniter seetting
 knitr::opts_chunk$set(
@@ -36,28 +40,45 @@ tidy = TRUE
 )
 ```
 
-# 1 READ ME
+<!------------------------------->
+# 📧 Contact
+<!------------------------------->
+
+**Jake M. Martin**
+  
+📧 **Email:** [jake.martin@deakin.edu.au](mailto:jake.martin@deakin.edu.au)  
+  
+📧 **Alt Email:** [jake.martin.research@gmail.com](mailto:jake.martin.research@gmail.com) 
+  
+🌐 **Web:** [jakemartin.org](https://jakemartin.org/)  
+  
+🐙 **GitHub**: [JakeMartinResearch](https://github.com/JakeMartinResearch)  
+
+<!------------------------------->
+# 📕 1 READ ME 
+<!------------------------------->
 
 I recommended you read the 'README' files before you work with the EIPAAB database, there are two '"'README.md' and 'README.csv', start with the '.md' file (https://github.com/JakeMartinResearch/EIPAAB-database/blob/main/README.md)
 
-# 2 Welcome
+<!------------------------------->
+# 👋 2 Welcome
+<!------------------------------->
 
 This is the the R markdown script written in R studio (2023.09.0+463 "Desert Sunflower" Release) used to summarise the systematic map database from Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour (EIPAAB): a systematic map and open access database" (doi: XXXXX). 
 
 It is designed to act as a starting point for anyone who wishes to use the 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database for their own projects. 
 
-This script was authored by Jake M Martin (jakemartin.org)
+**P.s** Apologies for any spelling mistakes in the script I (Jake Martin) am dyslexic and this is a very long document 
 
-Contact: jake.martin@deakin.edu or jake.martin@slu.se
-*P.s Apologies for any spelling mistakes in the script I am dyslexic and this is a very long document 
+<!------------------------------->
+# ⌨️ 3 R informartion
+<!------------------------------->
 
-# 3 R informartion
+If you are not familiar with R, [here's a beginners guide 📹](https://www.youtube.com/watch?v=_V8eKsto3Ug)   
 
-If you are not familiar with R, here's a beginners guide (https://www.youtube.com/watch?v=_V8eKsto3Ug). 
+Here's a link to download [R 📥](https://cran.r-project.org/) and download [R studio 📥](https://posit.co/products/open-source/rstudio/)   
 
-Here's a link to download R (https://cran.r-project.org/) and R studio (https://posit.co/products/open-source/rstudio/), and a guide on how to do so.
-
-This is an R markdown file, which makes annotating and running R code more user friendly, it is also easy to reproducible and share in a variate of formates (e.g. PDF). The R code is embed within chunks, and the output for code will be embedded under the chuck.
+This is an R markdown file, which makes annotating and running R code more user friendly, it is also easy to reproducible and share in a variate of formates (e.g. htlm). The R code is embed within chunks, and the output for code will be embedded under the chuck.
 
 ```{r} 
 # This is a chuck
@@ -67,7 +88,9 @@ All other text outside of the chucks are annotations (like this). Hashtags used 
 
 If you are not familiar with R markdown, here's a guide (https://www.youtube.com/watch?v=tKUufzpoHDE)
 
-# 4 Required R packages
+<!------------------------------->
+# 📦 4 Required R packages
+<!------------------------------->
 
 These are the R packages required to run the script. I have added them to a list so that I can install them all in one go using the function below called loaded_packages. This function I have made will load all the packages in the list below, if the packages are not already installed, this function will first install them.
 
@@ -102,12 +125,15 @@ For ggtree and treeio you may need to run this code for instillation
 # BiocManager::install("ggtree")
 ```
 
-# 5 Directories
+<!------------------------------->
+# 📂 5 Directories
+<!------------------------------->
 
 Creating out input and output directories. They will be made within the current parent directory (i.e. where the R sciprt is saved)
 
-This is code creates a folder and saves the directory as figure_path. This is where we will export our figures
+## Output directory 📤
 
+This is code creates a folder and saves the directory as figure_path. This is where we will export our figures
 
 ```{r}
 figures_path <- here("figures")
@@ -127,7 +153,7 @@ if (!dir.exists(output_path)) {
 }
 ```
 
-Input directory 
+## Input directory 📥
 
 ```{r}
 input_path <- here("input-data")
@@ -137,7 +163,9 @@ if (!dir.exists(figures_path)) {
 }
 ```
 
-# 6 Database informartion
+<!------------------------------->
+# 📖 6 Database informartion
+<!------------------------------->
 
 The 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database has 111 columns and 1754 rows. The columns represent various forms of metadata extracted from articles that were included in Martin et al. 2024 "Evidence of the impacts of pharmaceuticals on aquatic  animal behaviour: a systematic map and open access database" (doi: <to be added>).
 
@@ -151,10 +179,11 @@ setwd(input_path)
 READ_ME <- read.csv("READ-ME.csv", na = "NA") # loading the READ-ME file
 ```
 
+<!------------------------------->
+# 💿 7 Importing EIPAAB database
+<!------------------------------->
 
-# 7 Importing EIPAAB database
-
-Importing the EIPAAB-database.csv database 
+Importing the **💿 EIPAAB-database.csv** database 
 
 It can be assessed from... 
 
@@ -2731,7 +2760,7 @@ doses_fig
 ```
 
 
- ## 9.8 Concentrations
+## 13.9 Concentrations
 
 Here I will have a look at the min and max and range of doses used in the database. For the MS, I am including only studies that reported in a mass to water volume measure so we can compare standardised unites (ug/L). This was the most common reporting methods (62% of all data; 1090 total).
 
@@ -2960,7 +2989,7 @@ env_conc_summary <- EIPAAB_database %>%
 env_conc_summary
 ```
 
-## 13.9 Exposure location
+## 13.10 Exposure location
 
 Where the exposure itself was conducted
 
