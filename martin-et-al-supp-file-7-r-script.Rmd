@@ -60,6 +60,18 @@ tidy = TRUE
 
 I recommended you read the 'README' files before you work with the EIPAAB database, there are two '"'README.md' and 'README.csv', start with the '.md' file (https://github.com/JakeMartinResearch/EIPAAB-database/blob/main/README.md)
 
+
+<!------------------------------->
+# 📑 Sharing/accessing and citing
+<!------------------------------->
+
+1. **Licenses/restrictions placed on the data:** CC-BY 4.0  
+
+2. **Links to publications that cite or use the data:** Martin, JM, Michelangeli, M, Bertram, MG, Blanchfield, PJ, Brand, JA, Brodin, T, Brooks, B, Cerveny, D, Fergusson, KN, Lagisz, M, Lovin, LM, Ligocki, IY, Nakagawa, S, Ozeki, S, Sandoval-Herrera, N, Kendall, S, Sundin, J, Tan, H, Thor´e, E, Wong, BBM, McCallum, ES, (2024) Evidence of the Impacts of Pharmaceuticals on aquatic animal behaviour (EIPAAB): a systematic map and open access database. EcoEvoRxiv https://doi.org/10.32942/X2NG9R    
+
+3. **Recommended citation for this dataset:** Martin, JM, Michelangeli, M, Bertram, MG, Blanchfield, PJ, Brand, JA, Brodin, T, Brooks, B, Cerveny, D, Fergusson, KN, Lagisz, M, Lovin, LM, Ligocki, IY, Nakagawa, S, Ozeki, S, Sandoval-Herrera, N, Kendall, S, Sundin, J, Tan, H, Thor´e, E, Wong, BBM, McCallum, ES, (2024) EIPAAB database, https://doi.org/10.17605/OSF.IO/ATWY6    
+
+
 <!------------------------------->
 # 👋 2 Welcome
 <!------------------------------->

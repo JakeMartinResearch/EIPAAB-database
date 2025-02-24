@@ -6,6 +6,15 @@ Jake M. Martin<sup>1,2,3,4</sup>, Marcus Michelangeli<sup>1,3,5</sup>, Michael G
 
 ---
 
+## Sharing/accessing information
+
+1. Licenses/restrictions placed on the data: CC-BY 4.0
+
+2. Links to publications that cite or use the data: Martin, JM, Michelangeli, M, Bertram, MG, Blanchfield, PJ, Brand, JA, Brodin, T, Brooks, B, Cerveny, D, Fergusson, KN, Lagisz, M, Lovin, LM, Ligocki, IY, Nakagawa, S, Ozeki, S, Sandoval-Herrera, N, Kendall, S, Sundin, J, Tan, H, Thor´e, E, Wong, BBM, McCallum, ES, (2024) Evidence of the Impacts of Pharmaceuticals on aquatic animal behaviour (EIPAAB): a systematic map and open access database. EcoEvoRxiv https://doi.org/10.32942/X2NG9R
+
+3. Recommended citation for this dataset: 
+Martin, JM, Michelangeli, M, Bertram, MG, Blanchfield, PJ, Brand, JA, Brodin, T, Brooks, B, Cerveny, D, Fergusson, KN, Lagisz, M, Lovin, LM, Ligocki, IY, Nakagawa, S, Ozeki, S, Sandoval-Herrera, N, Kendall, S, Sundin, J, Tan, H, Thor´e, E, Wong, BBM, McCallum, ES, (2024) EIPAAB database, https://doi.org/10.17605/OSF.IO/ATWY6
+
 ## Overview
 
 The R script is designed to act as a starting point for anyone who wishes to use the 'Evidence of the Impacts of Pharmaceuticals on Aquatic  Animal Behaviour' (EIPAAB) database for their own projects. 
