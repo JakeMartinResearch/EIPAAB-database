@@ -121,7 +121,8 @@ pacman::p_load(tidyverse,
                highcharter,
                pander,
                here, 
-               gt
+               gt,
+               readxl
 )
 ```
 
@@ -464,12 +465,12 @@ I have searched  articles published within these research areas from 1992-2022, 
 
 Each search indued only a date range (e.g. PY=(1992-2021)) AND the given web of science resarch area (e.g. WC=(Pharmacology & Pharmacy)). Searchers were done on the 04/07/2024. Only the total number of articles each year was taken.    
 
-First we will import the research field annual number of articles database I create (martin-et-al-additional-file-10-wos-research-areas-1992-2022.csv). It is provide as supplementary file 9.   
+First we will import the research field annual number of articles database I create (martin-et-al-additional-file-10-wos-research-areas-1992-2022.xlsx). It is provide as supplementary file 9.   
 
 ```{r, warning=FALSE}
 setwd(input_path)
 
-wos_research_areas_n <- read.csv("martin-et-al-supp-file-10-wos-research-areas-1992-2022.csv") %>% 
+wos_research_areas_n <- read_excel("martin-et-al-additional-file-10-wos-research-areas-1992-2022.xlsx", sheet = "sheet1") %>% 
   dplyr::arrange(year) %>%
   dplyr::group_by(research_area) %>%
   dplyr::mutate(
