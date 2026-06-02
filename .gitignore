@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+*.Rproj
 .gitattributes
 /martin-et-al-supp-file-8-r-script_cache/
 /index_files/
