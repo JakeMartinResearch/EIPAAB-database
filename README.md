@@ -2,7 +2,7 @@ This repository contains the database and R script for the following systematic 
 
 ---
 
-Jake M. Martin<sup>1,2,3,4</sup>, Marcus Michelangeli<sup>1,3,5</sup>, Michael G. Bertram<sup>1,3,4</sup>, Paul J. Blanchfield<sup>6</sup>, Jack A. Brand<sup>1,7</sup>, Tomas Brodin<sup>1</sup>, Bryan W. Brooks<sup>8,9</sup>, Daniel Cerveny<sup>1,10</sup>, Kate N. Fergusson<sup>3</sup>, Malgorzata Lagisz<sup>11</sup>, Lea M. Lovin<sup>1,8</sup>, Isaac Y. Ligocki<sup>12</sup>, Shinichi Nakagawa<sup>11</sup>, Shiho Ozeki<sup>3</sup>, Natalia Sandoval-Herrera<sup>1</sup>, Kendall R. Scarlett<sup>8,13</sup>, Josefin Sundin<sup>14</sup>, Hung Tan<sup>3,15</sup>, Eli S.J. Thoré<sup>1,16,17</sup>, Bob B.M. Wong<sup>3</sup>, Erin S. McCallum<sup>1</sup> Evidence of the Impacts of Pharmaceuticals on Aquatic Animal Behaviour EIPAAB a systematic map and open access database (Pre-print DOI: https://doi.org/10.32942/X2NG9R)
+Jake M. Martin<sup>1,2,3,4</sup>, Marcus Michelangeli<sup>1,3,5</sup>, Michael G. Bertram<sup>1,3,4</sup>, Paul J. Blanchfield<sup>6</sup>, Jack A. Brand<sup>1,7</sup>, Tomas Brodin<sup>1</sup>, Bryan W. Brooks<sup>8,9</sup>, Daniel Cerveny<sup>1,10</sup>, Kate N. Fergusson<sup>3</sup>, Malgorzata Lagisz<sup>11</sup>, Lea M. Lovin<sup>1,8</sup>, Isaac Y. Ligocki<sup>12</sup>, Shinichi Nakagawa<sup>11</sup>, Shiho Ozeki<sup>3</sup>, Natalia Sandoval-Herrera<sup>1</sup>, Kendall R. Scarlett<sup>8,13</sup>, Josefin Sundin<sup>14</sup>, Hung Tan<sup>3,15</sup>, Eli S.J. Thoré<sup>1,16,17</sup>, Bob B.M. Wong<sup>3</sup>, Erin S. McCallum<sup>1</sup> Evidence of the impacts of pharmaceuticals on aquatic animal behaviour (EIPAAB): a systematic map and open access database. Environ Evid 14, 4 (2025). https://doi.org/10.1186/s13750-025-00357-6
 
 ---
 
@@ -10,7 +10,7 @@ Jake M. Martin<sup>1,2,3,4</sup>, Marcus Michelangeli<sup>1,3,5</sup>, Michael G
 
 1. Licenses/restrictions placed on the data: CC-BY 4.0
 
-2. Links to publications that cite or use the data: Martin, JM, Michelangeli, M, Bertram, MG, Blanchfield, PJ, Brand, JA, Brodin, T, Brooks, B, Cerveny, D, Fergusson, KN, Lagisz, M, Lovin, LM, Ligocki, IY, Nakagawa, S, Ozeki, S, Sandoval-Herrera, N, Kendall, S, Sundin, J, Tan, H, Thor´e, E, Wong, BBM, McCallum, ES, (2024) Evidence of the Impacts of Pharmaceuticals on aquatic animal behaviour (EIPAAB): a systematic map and open access database. EcoEvoRxiv https://doi.org/10.32942/X2NG9R
+2. Links to publications that cite or use the data: Martin, JM, Michelangeli, M, Bertram, MG, Blanchfield, PJ, Brand, JA, Brodin, T, Brooks, B, Cerveny, D, Fergusson, KN, Lagisz, M, Lovin, LM, Ligocki, IY, Nakagawa, S, Ozeki, S, Sandoval-Herrera, N, Kendall, S, Sundin, J, Tan, H, Thor´e, E, Wong, BBM, McCallum, ES, (2025) Evidence of the impacts of pharmaceuticals on aquatic animal behaviour (EIPAAB): a systematic map and open access database. Environ Evid 14, 4 (2025). https://doi.org/10.1186/s13750-025-00357-6
 
 3. Recommended citation for this dataset: 
 Martin, JM, Michelangeli, M, Bertram, MG, Blanchfield, PJ, Brand, JA, Brodin, T, Brooks, B, Cerveny, D, Fergusson, KN, Lagisz, M, Lovin, LM, Ligocki, IY, Nakagawa, S, Ozeki, S, Sandoval-Herrera, N, Kendall, S, Sundin, J, Tan, H, Thor´e, E, Wong, BBM, McCallum, ES, (2024) EIPAAB database, https://doi.org/10.17605/OSF.IO/ATWY6
